@@ -20,11 +20,12 @@ Demo-ready React application for supermarket shoppers. The app helps users navig
 ## Routes
 
 - `/login`: user access page
-- `/`: dashboard with shopping sectors and planning cards
-- `/setor/:sectorId`: sector detail with full checklist
-- `/buscar-supermercados`: supermarket search and filter page
+- `/`: public landing page
+- `/dashboard`: dashboard with shopping sectors and planning cards
+- `/dashboard/setor/:sectorId`: sector detail with full checklist
+- `/dashboard/buscar-supermercados`: supermarket search and filter page
 
-All app routes except `/login` are protected by authentication.
+All dashboard routes are protected by authentication.
 
 ## Local run
 
@@ -60,6 +61,24 @@ This project now includes a backend in `api/`, following the same architecture s
 Default API URL: `http://localhost:4000`
 Health check: `GET /health`
 Supermarkets route: `GET /api/supermarkets`
+
+## Deploy on Vercel (Frontend)
+
+This repository is ready to deploy the frontend on Vercel as a Vite SPA.
+
+1. Import the repository into Vercel.
+2. Keep these project settings:
+   - Build Command: `npm run build`
+   - Output Directory: `dist`
+3. Add environment variable:
+   - `VITE_API_URL` = your backend public URL (example: `https://your-api.example.com`)
+4. Deploy.
+
+Notes:
+
+- `vercel.json` includes SPA route fallback to `index.html`.
+- `.vercelignore` excludes local backend source from Vercel upload.
+- Backend deployment should run in a dedicated environment (for example: Render, Railway, Fly.io, or another Node host).
 
 ## Project layout
 
