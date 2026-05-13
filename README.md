@@ -40,6 +40,27 @@ All app routes except `/login` are protected by authentication.
 6. Preview production build:
    - `npm run preview`
 
+## Backend (Express + Prisma)
+
+This project now includes a backend in `api/`, following the same architecture style as the reference repository (Express + Prisma + PostgreSQL).
+
+1. Install backend dependencies:
+   - `npm install`
+2. Create backend env file:
+   - copy `api/.env.example` to `api/.env`
+3. Generate Prisma client:
+   - `npm run api:db:generate`
+4. Run migrations (development):
+   - `npm run api:db:migrate:dev`
+5. Seed initial supermarkets data:
+   - `npm run api:db:seed`
+6. Start backend API:
+   - `npm run api:dev`
+
+Default API URL: `http://localhost:4000`
+Health check: `GET /health`
+Supermarkets route: `GET /api/supermarkets`
+
 ## Project layout
 
 - `src/context/AuthContext.tsx`: authentication state and session handling
