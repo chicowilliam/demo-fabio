@@ -10,7 +10,7 @@ function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation() as { state?: { from?: string } };
 
-  const redirectTo = location.state?.from || '/';
+  const redirectTo = location.state?.from || '/dashboard';
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();

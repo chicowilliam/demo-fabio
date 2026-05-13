@@ -8,7 +8,7 @@ function AppShell() {
 
   const onSignOut = () => {
     logout();
-    navigate('/login');
+    navigate('/');
   };
 
   return (
@@ -31,11 +31,11 @@ function AppShell() {
       </header>
 
       <nav className="main-nav" aria-label="Navegação principal">
-        <NavLink to="/" end>
+        <NavLink to="/dashboard" end>
           Guia de Setores
         </NavLink>
-        <NavLink to="/setor/hortifruti">Setor em Destaque</NavLink>
-        <NavLink to="/buscar-supermercados">Buscar Supermercados</NavLink>
+        <NavLink to="/dashboard/setor/hortifruti">Setor em Destaque</NavLink>
+        <NavLink to="/dashboard/buscar-supermercados">Buscar Supermercados</NavLink>
       </nav>
 
       <main className="main-content">
