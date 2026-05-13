@@ -1,0 +1,25 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Supermarket {
+  id          String   @id @default(cuid())
+  name        String
+  city        String
+  state       String
+  address     String
+  phone       String
+  distance    Float
+  rating      Float
+  reviews     Int
+  hours       String
+  hasDelivery Boolean  @default(false)
+  services    String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
