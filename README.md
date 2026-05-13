@@ -1,36 +1,60 @@
-# SuperMercado Guia de Compras (Demo)
+# Meu Guia do Super (Demo)
 
-Aplicação React para demonstrar um guia de compras por setores de supermercado, com foco em:
+Demo-ready React application for supermarket shoppers. The app helps users navigate shopping by sector, view sector-specific checklists, and search supermarkets with responsive, mobile-first UX.
 
-- Layout em grade robusto
-- Experiência mobile forte e responsiva
-- Segurança de rotas com autenticação de sessão local
+## Stack
 
-## Rotas
+- React 18 + TypeScript + Vite
+- React Router DOM (protected routing)
+- Tailwind CSS + custom responsive CSS layers
+- Local session auth scaffold (localStorage-based)
 
-- `/login`: acesso do usuário
-- `/`: dashboard com setores e cards de planejamento
-- `/setor/:sectorId`: detalhe de um setor específico
+## Features
 
-As rotas de dashboard e setor são protegidas por autenticação.
+- Protected app area with login flow
+- Sector-based shopping guide with route-oriented cards
+- Supermarket search with filters and sorting
+- Professional responsive UI for desktop and mobile
+- Branded assets (custom SVG logo and PNG hero image)
 
-## Como rodar
+## Routes
 
-1. Instale Node.js 18+
-2. Instale dependências:
+- `/login`: user access page
+- `/`: dashboard with shopping sectors and planning cards
+- `/setor/:sectorId`: sector detail with full checklist
+- `/buscar-supermercados`: supermarket search and filter page
+
+All app routes except `/login` are protected by authentication.
+
+## Local run
+
+1. Install Node.js 18+
+2. Install dependencies:
    - `npm install`
-3. Rode em desenvolvimento:
+3. Start development server:
    - `npm run dev`
-4. Build de produção:
+4. Run type check:
+   - `npm run typecheck`
+5. Build for production:
    - `npm run build`
-5. Preview da build:
+6. Preview production build:
    - `npm run preview`
 
-## Estrutura principal
+## Project layout
 
-- `src/context/AuthContext.jsx`: estado de autenticação
-- `src/components/ProtectedRoute.jsx`: guarda de rotas
-- `src/components/AppShell.jsx`: casca de layout principal
-- `src/pages/DashboardPage.jsx`: grade de setores
-- `src/pages/SectorPage.jsx`: detalhe por setor
-- `src/pages/LoginPage.jsx`: login
+- `src/context/AuthContext.tsx`: authentication state and session handling
+- `src/components/ProtectedRoute.tsx`: route guard
+- `src/components/AppShell.tsx`: main app shell and navigation
+- `src/pages/LoginPage.tsx`: login page
+- `src/pages/DashboardPage.tsx`: sector dashboard
+- `src/pages/SectorPage.tsx`: sector details
+- `src/pages/SearchSupermarketsPage.tsx`: supermarket search UI
+- `src/data/sectors.ts`: shopping sector dataset
+- `src/data/supermarkets.ts`: supermarket dataset
+- `public/brand-logo.svg`: branded favicon/logo
+- `public/brand-hero.png`: branded hero image
+
+## Notes
+
+- This repository is focused on frontend demo experience and route protection patterns.
+- Authentication is intentionally lightweight for demo purposes and does not include backend JWT validation.
