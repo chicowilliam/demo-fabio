@@ -1,0 +1,23 @@
+{
+  "name": "Meu Guia do Super",
+  "short_name": "Guia Super",
+  "description": "Compare mercados e encontre oportunidades com planejamento inteligente.",
+  "theme_color": "#ef476f",
+  "background_color": "#f6f1e8",
+  "display": "standalone",
+  "start_url": "/",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/brand-hero.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/brand-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
