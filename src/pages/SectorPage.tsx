@@ -10,7 +10,7 @@ function SectorPage() {
       <section className="single-sector">
         <h2>Setor não encontrado</h2>
         <p>Esse setor não existe na base do demo.</p>
-        <Link to="/">Voltar para o guia</Link>
+        <Link to="/dashboard">Voltar para o guia</Link>
       </section>
     );
   }
@@ -41,7 +41,7 @@ function SectorPage() {
         </article>
       </div>
 
-      <Link to="/" className="back-link">
+      <Link to="/dashboard" className="back-link">
         Voltar para todos os setores
       </Link>
     </section>
