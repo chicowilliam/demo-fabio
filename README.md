@@ -22,6 +22,7 @@ Demo-ready React application for supermarket shoppers. The app helps users navig
 - `/login`: user access page
 - `/`: public landing page
 - `/dashboard`: dashboard with shopping sectors and planning cards
+- `/dashboard/rota-cliente`: guided customer route with optimized shopping sequence
 - `/dashboard/setor/:sectorId`: sector detail with full checklist
 - `/dashboard/buscar-supermercados`: supermarket search and filter page
 
