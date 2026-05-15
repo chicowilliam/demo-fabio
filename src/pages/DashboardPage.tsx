@@ -6,12 +6,15 @@ function DashboardPage() {
     <section>
       <div className="hero-grid">
         <article className="hero-card hero-main">
-          <p className="brand-eyebrow">Planejamento Inteligente</p>
-          <h2>Monte sua rota de compras por setor</h2>
+          <p className="brand-eyebrow">Experiência Cliente</p>
+          <h2>Roteiro visual para o cliente seguir na loja</h2>
           <p>
-            Economize tempo seguindo uma ordem eficiente: perecíveis, secos e itens de limpeza.
-            Cada cartão mostra tempo médio e itens recomendados.
+            Ative a rota guiada para transformar sua lista em sequência de corredores. O cliente
+            acompanha cada parada em ordem otimizada, com foco em fluidez e menos ida e volta.
           </p>
+          <div className="hero-main-cta">
+            <Link to="/dashboard/rota-cliente">Abrir rota do cliente</Link>
+          </div>
         </article>
 
         <article className="hero-card hero-metric">
@@ -20,10 +23,22 @@ function DashboardPage() {
         </article>
 
         <article className="hero-card hero-metric">
-          <span>Tempo médio total</span>
+          <span>Tempo médio com rota</span>
           <strong>42 min</strong>
         </article>
       </div>
+
+      <article className="route-preview-card">
+        <h3>Fluxo rápido de compra</h3>
+        <div className="route-preview-track">
+          <span>Entrada</span>
+          <span>Hortifruti</span>
+          <span>Mercearia</span>
+          <span>Limpeza</span>
+          <span>Laticínios</span>
+          <span>Checkout</span>
+        </div>
+      </article>
 
       <div className="sectors-grid">
         {sectors.map((sector) => (
@@ -43,7 +58,7 @@ function DashboardPage() {
 
             <div className="sector-card-bottom">
               <small>Tempo médio: {sector.averageTime}</small>
-              <Link to={`/setor/${sector.id}`}>Ver guia</Link>
+              <Link to={`/dashboard/setor/${sector.id}`}>Ver guia</Link>
             </div>
           </article>
         ))}
