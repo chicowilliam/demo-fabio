@@ -1,32 +1,20 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-
-const getApiUrl = (): string => {
-  const url = import.meta.env.VITE_API_URL?.trim();
-  
-  if (url) {
-    return url.replace(/\/$/, '');
-  }
-  
-  // In production, require explicit API URL
-  if (import.meta.env.PROD) {
-    throw new Error(
-      'VITE_API_URL environment variable is required in production. ' +
-      'Please set it in your .env or deployment configuration.'
-    );
-  }
-  
-  // Development fallback to localhost
-  console.warn('VITE_API_URL not set, using development default: http://localhost:4000');
-  return 'http://localhost:4000';
-};
+import { getApiUrl, getAuthToken } from './api';
 
 const API_URL = getApiUrl();
+
+const getAuthHeaders = (): HeadersInit => {
+  const token = getAuthToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
 
 export const useSupermarkets = () => {
   return useQuery({
     queryKey: ['supermarkets'],
     queryFn: async () => {
-      const response = await fetch(`${API_URL}/api/supermarkets`);
+      const response = await fetch(`${API_URL}/api/supermarkets`, {
+        headers: getAuthHeaders(),
+      });
       if (!response.ok) throw new Error('Failed to fetch supermarkets');
       return response.json();
     },
@@ -36,12 +24,12 @@ export const useSupermarkets = () => {
 };
 
 export const useSectors = () => {
-  // Will be replaced with API call when backend endpoint is created
   return useQuery({
     queryKey: ['sectors'],
     queryFn: async () => {
-      // TODO: Create /api/sectors endpoint in backend
-      const response = await fetch(`${API_URL}/api/sectors`);
+      const response = await fetch(`${API_URL}/api/sectors`, {
+        headers: getAuthHeaders(),
+      });
       if (!response.ok) throw new Error('Failed to fetch sectors');
       return response.json();
     },

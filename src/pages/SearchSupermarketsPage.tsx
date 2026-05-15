@@ -1,19 +1,34 @@
 import { useMemo, useState } from 'react';
 import { useSupermarkets } from '../lib/hooks';
 
-function SearchSupermarketsPage() {
-  const { data: supermarkets = [], isLoading, isError, error } = useSupermarkets();
+type Supermarket = {
+  id: string;
+  name: string;
+  city: string;
+  state: string;
+  address: string;
+  distance: number;
+  rating: number;
+  reviews: number;
+  hours: string;
+  phone: string;
+  hasDelivery?: boolean;
+  services?: string[];
+};
+
+export default function SearchSupermarketsPage() {
+  const { data: supermarkets = [] as Supermarket[], isLoading, isError, error } = useSupermarkets();
   const [searchText, setSearchText] = useState('');
   const [filterCity, setFilterCity] = useState('');
   const [sortBy, setSortBy] = useState('distance');
 
   const cities = useMemo(
-    () => [...new Set(supermarkets.map((sm) => sm.city))].sort(),
+    () => [...new Set(supermarkets.map((sm: Supermarket) => sm.city))].sort() as string[],
     [supermarkets]
   );
 
   const filtered = useMemo(() => {
-    let result = supermarkets.filter((sm) => {
+    let result = supermarkets.filter((sm: Supermarket) => {
       const matchesText =
         sm.name.toLowerCase().includes(searchText.toLowerCase()) ||
         sm.city.toLowerCase().includes(searchText.toLowerCase()) ||
@@ -25,11 +40,11 @@ function SearchSupermarketsPage() {
     });
 
     if (sortBy === 'distance') {
-      result.sort((a, b) => a.distance - b.distance);
+      result.sort((a: Supermarket, b: Supermarket) => a.distance - b.distance);
     } else if (sortBy === 'rating') {
-      result.sort((a, b) => b.rating - a.rating);
+      result.sort((a: Supermarket, b: Supermarket) => b.rating - a.rating);
     } else if (sortBy === 'reviews') {
-      result.sort((a, b) => b.reviews - a.reviews);
+      result.sort((a: Supermarket, b: Supermarket) => b.reviews - a.reviews);
     }
 
     return result;
@@ -75,7 +90,7 @@ function SearchSupermarketsPage() {
                 onChange={(e) => setFilterCity(e.target.value)}
               >
                 <option value="">Todas as cidades</option>
-                {cities.map((city) => (
+                {cities.map((city: string) => (
                   <option key={city} value={city}>
                     {city}
                   </option>
@@ -107,51 +122,52 @@ function SearchSupermarketsPage() {
             </div>
           ) : (
             <div className="supermarkets-grid">
-              {filtered.map((sm) => (
+              {filtered.map((sm: Supermarket) => (
                 <article key={sm.id} className="supermarket-card">
-              <div className="sm-header">
-                <h3>{sm.name}</h3>
-                <div className="sm-rating">
-                  <span className="star">★</span>
-                  <span className="rating-value">{sm.rating}</span>
-                  <span className="reviews-count">({sm.reviews})</span>
-                </div>
-              </div>
-
-              <p className="sm-location">
-                {sm.city}, {sm.state}
-              </p>
-              <p className="sm-address">{sm.address}</p>
-
-              <div className="sm-details">
-                <div className="detail-item">
-                  <span className="label">Distância:</span>
-                  <span className="value">{sm.distance} km</span>
-                </div>
-                <div className="detail-item">
-                  <span className="label">Horário:</span>
-                  <span className="value">{sm.hours}</span>
-                </div>
-              </div>
-
-              {sm.services && sm.services.length > 0 && (
-                <div className="sm-services">
-                  <p className="services-label">Serviços:</p>
-                  <div className="services-list">
-                    {sm.services.map((service) => (
-                      <span key={service} className="service-tag">
-                        {service}
-                      </span>
-                    ))}
+                  <div className="sm-header">
+                    <h3>{sm.name}</h3>
+                    <div className="sm-rating">
+                      <span className="star">★</span>
+                      <span className="rating-value">{sm.rating}</span>
+                      <span className="reviews-count">({sm.reviews})</span>
+                    </div>
                   </div>
-                </div>
-              )}
 
-              <div className="sm-footer">
-                {sm.hasDelivery && <span className="delivery-badge">📦 Entrega disponível</span>}
-                <a href={`tel:${sm.phone}`} className="call-link">
-                  Ligar
-                </a>
+                  <p className="sm-location">
+                    {sm.city}, {sm.state}
+                  </p>
+                  <p className="sm-address">{sm.address}</p>
+
+                  <div className="sm-details">
+                    <div className="detail-item">
+                      <span className="label">Distância:</span>
+                      <span className="value">{sm.distance} km</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="label">Horário:</span>
+                      <span className="value">{sm.hours}</span>
+                    </div>
+                  </div>
+
+                  {sm.services && sm.services.length > 0 && (
+                    <div className="sm-services">
+                      <p className="services-label">Serviços:</p>
+                      <div className="services-list">
+                        {sm.services.map((service: string) => (
+                          <span key={service} className="service-tag">
+                            {service}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="sm-footer">
+                    {sm.hasDelivery && <span className="delivery-badge">📦 Entrega disponível</span>}
+                    <a href={`tel:${sm.phone}`} className="call-link">
+                      Ligar
+                    </a>
+                  </div>
                 </article>
               ))}
             </div>
@@ -161,5 +177,3 @@ function SearchSupermarketsPage() {
     </section>
   );
 }
-
-export default SearchSupermarketsPage;

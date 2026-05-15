@@ -6,16 +6,29 @@ import heroImage from '../assets/supermercado-demo.png';
 
 function LoginPage() {
   const [name, setName] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation() as { state?: { from?: string } };
 
   const redirectTo = location.state?.from || '/dashboard';
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    login(name);
-    navigate(redirectTo, { replace: true });
+
+    setErrorMessage('');
+    setIsSubmitting(true);
+
+    try {
+      await login(name, 'shopper');
+      navigate(redirectTo, { replace: true });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Não foi possível autenticar.';
+      setErrorMessage(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -39,7 +52,10 @@ function LoginPage() {
               placeholder="Ex.: Fabio"
               required
             />
-            <button type="submit">Entrar no guia</button>
+            {errorMessage ? <small className="login-error">{errorMessage}</small> : null}
+            <button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Entrando...' : 'Entrar no guia'}
+            </button>
           </form>
         </div>
 

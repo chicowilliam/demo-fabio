@@ -25,7 +25,7 @@ export const optimizationQueue = new PQueue({
 export const addOptimizationTask = async (
   task: OptimizationTask
 ): Promise<OptimizationResult> => {
-  return optimizationQueue.add(async () => {
+  const queued = await optimizationQueue.add(async (): Promise<OptimizationResult> => {
     try {
       // TODO: Call backend optimization endpoint
       // For now, simulate optimization
@@ -46,6 +46,12 @@ export const addOptimizationTask = async (
       throw error;
     }
   });
+
+  if (!queued) {
+    throw new Error('Optimization queue returned no result');
+  }
+
+  return queued;
 };
 
 export const getQueueSize = () => optimizationQueue.size;

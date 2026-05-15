@@ -5,6 +5,8 @@ import { Prisma } from "@prisma/client";
 import * as z from "zod";
 
 import { env } from "./utils/env.js";
+import { requireAuth } from "./middlewares/auth.js";
+import { authRouter } from "./routes/authRoute.js";
 import { supermarketRouter } from "./routes/supermarketRoute.js";
 import { sectorRouter } from "./routes/sectorRoute.js";
 import { prisma } from "./utils/prisma.js";
@@ -24,8 +26,9 @@ app.get("/health", async (_request, response) => {
   }
 });
 
-app.use("/api/supermarkets", supermarketRouter);
-app.use("/api/sectors", sectorRouter);
+app.use("/api/auth", authRouter);
+app.use("/api/supermarkets", requireAuth(["shopper", "admin"]), supermarketRouter);
+app.use("/api/sectors", requireAuth(["shopper", "admin"]), sectorRouter);
 
 app.use((_request, response) => {
   response.status(404).json({ message: "Route not found" });
