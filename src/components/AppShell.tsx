@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import brandLogo from '../assets/demo-supermercado.svg.svg';
+import brandLogo from '../assets/demo-supermercado.svg';
 
 function AppShell() {
   const { user, logout } = useAuth();
@@ -34,6 +34,7 @@ function AppShell() {
         <NavLink to="/dashboard" end>
           Guia de Setores
         </NavLink>
+        <NavLink to="/dashboard/rota-cliente">Rota do Cliente</NavLink>
         <NavLink to="/dashboard/setor/hortifruti">Setor em Destaque</NavLink>
         <NavLink to="/dashboard/buscar-supermercados">Buscar Supermercados</NavLink>
       </nav>

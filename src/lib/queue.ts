@@ -1,5 +1,19 @@
 import PQueue from 'p-queue';
 
+export interface OptimizationResult {
+  id: string;
+  optimizedRoute: string[];
+  estimatedTime: number;
+}
+
+export interface OptimizationTask {
+  id: string;
+  supermarketId: string;
+  items: string[];
+  onProgress?: (progress: number) => void;
+  onComplete?: (result: OptimizationResult) => void;
+}
+
 // Create a queue for optimizing shopping routes/tasks
 // Concurrency: 1 task at a time to ensure ordered optimization
 export const optimizationQueue = new PQueue({
@@ -8,17 +22,9 @@ export const optimizationQueue = new PQueue({
   intervalCap: 5,
 });
 
-export interface OptimizationTask {
-  id: string;
-  supermarketId: string;
-  items: string[];
-  onProgress?: (progress: number) => void;
-  onComplete?: (result: any) => void;
-}
-
 export const addOptimizationTask = async (
   task: OptimizationTask
-): Promise<any> => {
+): Promise<OptimizationResult> => {
   return optimizationQueue.add(async () => {
     try {
       // TODO: Call backend optimization endpoint
@@ -26,17 +32,15 @@ export const addOptimizationTask = async (
       const simulatedDelay = Math.random() * 2000 + 1000;
       await new Promise(resolve => setTimeout(resolve, simulatedDelay));
 
-      task.onComplete?.({
+      const result: OptimizationResult = {
         id: task.id,
         optimizedRoute: task.items.sort(), // Simple sort for now
         estimatedTime: Math.round(simulatedDelay / 1000),
-      });
-
-      return {
-        id: task.id,
-        optimizedRoute: task.items.sort(),
-        estimatedTime: Math.round(simulatedDelay / 1000),
       };
+
+      task.onComplete?.(result);
+
+      return result;
     } catch (error) {
       console.error('Optimization failed:', error);
       throw error;

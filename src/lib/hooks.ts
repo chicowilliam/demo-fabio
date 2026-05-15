@@ -1,6 +1,26 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-const API_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:4000').replace(/\/$/, '');
+const getApiUrl = (): string => {
+  const url = import.meta.env.VITE_API_URL?.trim();
+  
+  if (url) {
+    return url.replace(/\/$/, '');
+  }
+  
+  // In production, require explicit API URL
+  if (import.meta.env.PROD) {
+    throw new Error(
+      'VITE_API_URL environment variable is required in production. ' +
+      'Please set it in your .env or deployment configuration.'
+    );
+  }
+  
+  // Development fallback to localhost
+  console.warn('VITE_API_URL not set, using development default: http://localhost:4000');
+  return 'http://localhost:4000';
+};
+
+const API_URL = getApiUrl();
 
 export const useSupermarkets = () => {
   return useQuery({

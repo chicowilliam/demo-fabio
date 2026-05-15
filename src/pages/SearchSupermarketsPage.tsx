@@ -1,14 +1,15 @@
 import { useMemo, useState } from 'react';
-import { supermarkets } from '../data/supermarkets';
+import { useSupermarkets } from '../lib/hooks';
 
 function SearchSupermarketsPage() {
+  const { data: supermarkets = [], isLoading, isError, error } = useSupermarkets();
   const [searchText, setSearchText] = useState('');
   const [filterCity, setFilterCity] = useState('');
   const [sortBy, setSortBy] = useState('distance');
 
   const cities = useMemo(
     () => [...new Set(supermarkets.map((sm) => sm.city))].sort(),
-    []
+    [supermarkets]
   );
 
   const filtered = useMemo(() => {
@@ -32,7 +33,7 @@ function SearchSupermarketsPage() {
     }
 
     return result;
-  }, [searchText, filterCity, sortBy]);
+  }, [supermarkets, searchText, filterCity, sortBy]);
 
   return (
     <section className="search-page">
@@ -41,60 +42,73 @@ function SearchSupermarketsPage() {
         <p>Encontre o supermercado ideal perto de você</p>
       </div>
 
-      <div className="search-filters">
-        <div className="filter-group">
-          <label htmlFor="search-input">Buscar por nome ou local</label>
-          <input
-            id="search-input"
-            type="text"
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            placeholder="Ex.: Pão de Açúcar, São Paulo..."
-          />
+      {isError && (
+        <div className="error-state">
+          <p>Erro ao carregar supermercados: {error?.message}</p>
+          <small>Tente recarregar a página.</small>
         </div>
+      )}
 
-        <div className="filter-group">
-          <label htmlFor="city-select">Cidade</label>
-          <select
-            id="city-select"
-            value={filterCity}
-            onChange={(e) => setFilterCity(e.target.value)}
-          >
-            <option value="">Todas as cidades</option>
-            {cities.map((city) => (
-              <option key={city} value={city}>
-                {city}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="filter-group">
-          <label htmlFor="sort-select">Ordenar por</label>
-          <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} id="sort-select">
-            <option value="distance">Distância</option>
-            <option value="rating">Avaliação</option>
-            <option value="reviews">Mais avaliado</option>
-          </select>
-        </div>
-      </div>
-
-      <div className="results-header">
-        <p>
-          {filtered.length} supermercado{filtered.length !== 1 ? 's' : ''} encontrado
-          {filtered.length !== 1 ? 's' : ''}
-        </p>
-      </div>
-
-      {filtered.length === 0 ? (
-        <div className="empty-state">
-          <p>Nenhum supermercado encontrado com esses critérios.</p>
-          <small>Tente alterar os filtros ou buscar por outro termo.</small>
+      {isLoading ? (
+        <div className="loading-state">
+          <p>Carregando supermercados...</p>
         </div>
       ) : (
-        <div className="supermarkets-grid">
-          {filtered.map((sm) => (
-            <article key={sm.id} className="supermarket-card">
+        <>
+          <div className="search-filters">
+            <div className="filter-group">
+              <label htmlFor="search-input">Buscar por nome ou local</label>
+              <input
+                id="search-input"
+                type="text"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                placeholder="Ex.: Pão de Açúcar, São Paulo..."
+              />
+            </div>
+
+            <div className="filter-group">
+              <label htmlFor="city-select">Cidade</label>
+              <select
+                id="city-select"
+                value={filterCity}
+                onChange={(e) => setFilterCity(e.target.value)}
+              >
+                <option value="">Todas as cidades</option>
+                {cities.map((city) => (
+                  <option key={city} value={city}>
+                    {city}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="filter-group">
+              <label htmlFor="sort-select">Ordenar por</label>
+              <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} id="sort-select">
+                <option value="distance">Distância</option>
+                <option value="rating">Avaliação</option>
+                <option value="reviews">Mais avaliado</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="results-header">
+            <p>
+              {filtered.length} supermercado{filtered.length !== 1 ? 's' : ''} encontrado
+              {filtered.length !== 1 ? 's' : ''}
+            </p>
+          </div>
+
+          {filtered.length === 0 ? (
+            <div className="empty-state">
+              <p>Nenhum supermercado encontrado com esses critérios.</p>
+              <small>Tente alterar os filtros ou buscar por outro termo.</small>
+            </div>
+          ) : (
+            <div className="supermarkets-grid">
+              {filtered.map((sm) => (
+                <article key={sm.id} className="supermarket-card">
               <div className="sm-header">
                 <h3>{sm.name}</h3>
                 <div className="sm-rating">
@@ -138,10 +152,11 @@ function SearchSupermarketsPage() {
                 <a href={`tel:${sm.phone}`} className="call-link">
                   Ligar
                 </a>
-              </div>
-            </article>
-          ))}
-        </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </>
       )}
     </section>
   );

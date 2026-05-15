@@ -26,7 +26,15 @@ type AuthProviderProps = {
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<AuthUser | null>(() => {
     const cached = localStorage.getItem('demo-market-user');
-    return cached ? (JSON.parse(cached) as AuthUser) : null;
+    if (!cached) return null;
+    
+    try {
+      return JSON.parse(cached) as AuthUser;
+    } catch (_error) {
+      console.warn('Corrupted auth data in localStorage, clearing...');
+      localStorage.removeItem('demo-market-user');
+      return null;
+    }
   });
 
   const [ability, setAbility] = useState<AppAbility>(() => {

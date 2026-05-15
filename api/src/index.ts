@@ -6,6 +6,7 @@ import * as z from "zod";
 
 import { env } from "./utils/env.js";
 import { supermarketRouter } from "./routes/supermarketRoute.js";
+import { sectorRouter } from "./routes/sectorRoute.js";
 import { prisma } from "./utils/prisma.js";
 
 const app = express();
@@ -24,6 +25,7 @@ app.get("/health", async (_request, response) => {
 });
 
 app.use("/api/supermarkets", supermarketRouter);
+app.use("/api/sectors", sectorRouter);
 
 app.use((_request, response) => {
   response.status(404).json({ message: "Route not found" });
