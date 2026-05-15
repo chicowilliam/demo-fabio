@@ -6,6 +6,7 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import SectorPage from './pages/SectorPage';
 import SearchSupermarketsPage from './pages/SearchSupermarketsPage';
+import ClientRoutePage from './pages/ClientRoutePage';
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
         <Route index element={<DashboardPage />} />
         <Route path="setor/:sectorId" element={<SectorPage />} />
         <Route path="buscar-supermercados" element={<SearchSupermarketsPage />} />
+        <Route path="rota-cliente" element={<ClientRoutePage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
