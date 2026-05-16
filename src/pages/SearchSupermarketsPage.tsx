@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { useSupermarkets } from '../lib/hooks';
+import { useSupermarketSuggestions, useSupermarkets } from '../lib/hooks';
+import { useDebouncedValue } from '../lib/useDebouncedValue';
 
 type Supermarket = {
   id: string;
@@ -17,10 +18,21 @@ type Supermarket = {
 };
 
 export default function SearchSupermarketsPage() {
-  const { data: supermarkets = [] as Supermarket[], isLoading, isError, error } = useSupermarkets();
+  const supermarketsQuery = useSupermarkets();
   const [searchText, setSearchText] = useState('');
   const [filterCity, setFilterCity] = useState('');
   const [sortBy, setSortBy] = useState('distance');
+  const [activeSuggestion, setActiveSuggestion] = useState(-1);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  const supermarkets = (supermarketsQuery.data ?? []) as Supermarket[];
+  const isLoading = supermarketsQuery.isLoading;
+  const isError = supermarketsQuery.isError;
+  const error = supermarketsQuery.error as Error | null;
+
+  const debouncedSearch = useDebouncedValue(searchText, 220);
+  const suggestionsQuery = useSupermarketSuggestions(debouncedSearch);
+  const suggestions = (suggestionsQuery.data ?? []) as Supermarket[];
 
   const cities = useMemo(
     () => [...new Set(supermarkets.map((sm: Supermarket) => sm.city))].sort() as string[],
@@ -50,6 +62,50 @@ export default function SearchSupermarketsPage() {
     return result;
   }, [supermarkets, searchText, filterCity, sortBy]);
 
+  const visibleSuggestions = useMemo(() => {
+    if (!showSuggestions || searchText.trim().length < 2) {
+      return [] as Supermarket[];
+    }
+
+    return suggestions;
+  }, [showSuggestions, searchText, suggestions]);
+
+  const selectSuggestion = (suggestion: Supermarket) => {
+    setSearchText(suggestion.name);
+    setFilterCity(suggestion.city);
+    setShowSuggestions(false);
+    setActiveSuggestion(-1);
+  };
+
+  const onSearchKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (visibleSuggestions.length === 0) {
+      return;
+    }
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      setActiveSuggestion((prev) => (prev + 1) % visibleSuggestions.length);
+      return;
+    }
+
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      setActiveSuggestion((prev) => (prev <= 0 ? visibleSuggestions.length - 1 : prev - 1));
+      return;
+    }
+
+    if (event.key === 'Enter' && activeSuggestion >= 0) {
+      event.preventDefault();
+      selectSuggestion(visibleSuggestions[activeSuggestion]);
+      return;
+    }
+
+    if (event.key === 'Escape') {
+      setShowSuggestions(false);
+      setActiveSuggestion(-1);
+    }
+  };
+
   return (
     <section className="search-page">
       <div className="search-header">
@@ -73,13 +129,51 @@ export default function SearchSupermarketsPage() {
           <div className="search-filters">
             <div className="filter-group">
               <label htmlFor="search-input">Buscar por nome ou local</label>
-              <input
-                id="search-input"
-                type="text"
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                placeholder="Ex.: Pão de Açúcar, São Paulo..."
-              />
+              <div className="suggestion-combobox">
+                <input
+                  id="search-input"
+                  type="text"
+                  role="combobox"
+                  aria-expanded={visibleSuggestions.length > 0}
+                  aria-controls="supermarket-suggestion-list"
+                  aria-activedescendant={
+                    activeSuggestion >= 0 ? `suggestion-${activeSuggestion}` : undefined
+                  }
+                  value={searchText}
+                  onFocus={() => setShowSuggestions(true)}
+                  onBlur={() => {
+                    // Delay permite clique com mouse nos itens antes de esconder.
+                    window.setTimeout(() => setShowSuggestions(false), 120);
+                  }}
+                  onKeyDown={onSearchKeyDown}
+                  onChange={(e) => {
+                    setSearchText(e.target.value);
+                    setShowSuggestions(true);
+                    setActiveSuggestion(-1);
+                  }}
+                  placeholder="Ex.: Pão de Açúcar, São Paulo..."
+                />
+
+                {visibleSuggestions.length > 0 ? (
+                  <ul id="supermarket-suggestion-list" role="listbox" className="suggestion-list">
+                    {visibleSuggestions.map((suggestion: Supermarket, index: number) => (
+                      <li key={`${suggestion.id}-${index}`} id={`suggestion-${index}`} role="option">
+                        <button
+                          type="button"
+                          className={activeSuggestion === index ? 'active' : ''}
+                          onMouseEnter={() => setActiveSuggestion(index)}
+                          onClick={() => selectSuggestion(suggestion)}
+                        >
+                          <strong>{suggestion.name}</strong>
+                          <span>
+                            {suggestion.city}, {suggestion.state}
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
             </div>
 
             <div className="filter-group">
@@ -109,7 +203,7 @@ export default function SearchSupermarketsPage() {
           </div>
 
           <div className="results-header">
-            <p>
+            <p aria-live="polite">
               {filtered.length} supermercado{filtered.length !== 1 ? 's' : ''} encontrado
               {filtered.length !== 1 ? 's' : ''}
             </p>
