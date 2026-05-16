@@ -11,7 +11,16 @@ export type ShoppingItem = {
   sectorId: string;
   sectorTitle: string;
   aisle: string;
+  category: string;
+  brand: string;
   point: MapPoint;
+};
+
+export type CuratedList = {
+  id: string;
+  title: string;
+  description: string;
+  match: (item: ShoppingItem) => boolean;
 };
 
 export type RouteStep = {
@@ -46,15 +55,64 @@ function distance(a: MapPoint, b: MapPoint) {
 
 export const shoppingItems: ShoppingItem[] = sectors.flatMap((sector) => {
   const sectorPoint = sectorPoints[sector.id] ?? { x: 50, y: 50 };
+  const sectorCategories: Record<string, string> = {
+    hortifruti: 'Frescos',
+    acougue: 'Proteinas',
+    mercearia: 'Despensa',
+    limpeza: 'Limpeza',
+    higiene: 'Cuidados pessoais',
+    laticinios: 'Refrigerados',
+  };
+
+  const sectorBrands: Record<string, string[]> = {
+    hortifruti: ['NaturalVale', 'CampoBom', 'VerdeVida'],
+    acougue: ['SaborSul', 'PrimeCorte', 'BoiNobre'],
+    mercearia: ['CasaNova', 'PuroGrao', 'BomDia'],
+    limpeza: ['LimpaMax', 'BrilhoLar', 'EcoFresh'],
+    higiene: ['VitaCare', 'PeleLeve', 'OralPrime'],
+    laticinios: ['LeiteBom', 'SerraFresca', 'LacTop'],
+  };
+
+  const category = sectorCategories[sector.id] ?? 'Geral';
+  const brands = sectorBrands[sector.id] ?? ['Marca da Casa'];
+
   return sector.checklist.map((item) => ({
     id: `${sector.id}-${item.toLowerCase().replace(/\s+/g, '-')}`,
     name: item,
     sectorId: sector.id,
     sectorTitle: sector.title,
     aisle: sector.aisle,
+    category,
+    brand: brands[item.length % brands.length],
     point: sectorPoint,
   }));
 });
+
+export const curatedLists: CuratedList[] = [
+  {
+    id: 'semanal-familia',
+    title: 'Semana em familia',
+    description: 'Cesta base para 5-7 dias com itens essenciais.',
+    match: (item) =>
+      ['Frescos', 'Refrigerados', 'Despensa'].includes(item.category) ||
+      ['arroz', 'feijao', 'leite'].some((keyword) =>
+        item.name.toLowerCase().includes(keyword)
+      ),
+  },
+  {
+    id: 'reposicao-express',
+    title: 'Reposicao express',
+    description: 'Itens de giro rapido para compra curta.',
+    match: (item) =>
+      ['Limpeza', 'Cuidados pessoais', 'Refrigerados'].includes(item.category),
+  },
+  {
+    id: 'fit-proteico',
+    title: 'Fit proteico',
+    description: 'Selecao focada em proteina e frescos.',
+    match: (item) => ['Proteinas', 'Frescos'].includes(item.category),
+  },
+];
 
 export function optimizeShoppingRoute(selectedItemIds: string[]): OptimizedShoppingRoute {
   const selectedItems = shoppingItems.filter((item) => selectedItemIds.includes(item.id));
