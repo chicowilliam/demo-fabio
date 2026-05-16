@@ -1,16 +1,7 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { NavLink, Outlet } from 'react-router-dom';
 import brandLogo from '../assets/demo-supermercado.svg';
 
 function AppShell() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-
-  const onSignOut = () => {
-    logout();
-    navigate('/');
-  };
-
   return (
     <div className="app-shell">
       <header className="topbar">
@@ -23,10 +14,7 @@ function AppShell() {
         </div>
 
         <div className="topbar-user">
-          <span>Olá, {user?.name}</span>
-          <button type="button" onClick={onSignOut} className="ghost-btn">
-            Sair
-          </button>
+          <span>Modo aberto para demonstração</span>
         </div>
       </header>
 

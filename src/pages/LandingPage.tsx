@@ -1,10 +1,7 @@
 import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import { MapPin, Zap, Users, ShoppingCart } from 'lucide-react';
 
 export default function LandingPage() {
-  const { isAuthenticated } = useAuth();
-
   return (
     <div className="landing-page">
       <header className="landing-header">
@@ -15,21 +12,15 @@ export default function LandingPage() {
           </div>
 
           <nav className="landing-nav">
-            {isAuthenticated ? (
-              <>
-                <Link to="/dashboard" className="landing-cta-primary">
-                  Ir para Dashboard
-                </Link>
-
-                <Link to="/dashboard/buscar-supermercados" className="landing-nav-link">
-                  Buscar
-                </Link>
-              </>
-            ) : (
-              <Link to="/login" className="landing-cta-primary">
-                Entrar
+            <>
+              <Link to="/dashboard" className="landing-cta-primary">
+                Ir para Dashboard
               </Link>
-            )}
+
+              <Link to="/dashboard/buscar-supermercados" className="landing-nav-link">
+                Buscar
+              </Link>
+            </>
           </nav>
         </div>
       </header>
@@ -59,15 +50,9 @@ export default function LandingPage() {
             </p>
 
             <div className="landing-hero-actions">
-              {isAuthenticated ? (
-                <Link to="/dashboard" className="landing-cta-primary">
-                  Entrar no dashboard agora
-                </Link>
-              ) : (
-                <Link to="/login" className="landing-cta-primary">
-                  Começar agora
-                </Link>
-              )}
+              <Link to="/dashboard" className="landing-cta-primary">
+                Entrar no dashboard agora
+              </Link>
 
               <a href="#features" className="landing-cta-secondary">
                 Saiba mais
@@ -134,15 +119,9 @@ export default function LandingPage() {
       <section className="landing-cta-band">
         <div className="landing-shell">
           <h2>Pronto para comprar com rota guiada?</h2>
-          {isAuthenticated ? (
-            <Link to="/dashboard" className="landing-cta-primary">
-              Ir para dashboard
-            </Link>
-          ) : (
-            <Link to="/login" className="landing-cta-primary">
-              Criar conta gratuita
-            </Link>
-          )}
+          <Link to="/dashboard" className="landing-cta-primary">
+            Ir para dashboard
+          </Link>
         </div>
       </section>
 
