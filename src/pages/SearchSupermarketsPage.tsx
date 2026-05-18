@@ -107,29 +107,29 @@ export default function SearchSupermarketsPage() {
   };
 
   return (
-    <section className="search-page">
-      <div className="search-header">
-        <h2>Buscar Supermercados</h2>
-        <p>Encontre o supermercado ideal perto de você</p>
+    <section className="space-y-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_14px_32px_rgba(15,23,42,0.08)]">
+      <div>
+        <h2 className="font-['Fraunces'] text-3xl font-semibold text-slate-900">Buscar Supermercados</h2>
+        <p className="mt-2 text-slate-600">Encontre o supermercado ideal perto de voce</p>
       </div>
 
       {isError && (
-        <div className="error-state">
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-700">
           <p>Erro ao carregar supermercados: {error?.message}</p>
-          <small>Tente recarregar a página.</small>
+          <small className="mt-1 block">Tente recarregar a pagina.</small>
         </div>
       )}
 
       {isLoading ? (
-        <div className="loading-state">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-slate-600">
           <p>Carregando supermercados...</p>
         </div>
       ) : (
         <>
-          <div className="search-filters">
-            <div className="filter-group">
-              <label htmlFor="search-input">Buscar por nome ou local</label>
-              <div className="suggestion-combobox">
+          <div className="grid gap-4 lg:grid-cols-3">
+            <div className="space-y-2 lg:col-span-2">
+              <label htmlFor="search-input" className="text-sm font-semibold text-slate-700">Buscar por nome ou local</label>
+              <div className="relative">
                 <input
                   id="search-input"
                   type="text"
@@ -152,20 +152,28 @@ export default function SearchSupermarketsPage() {
                     setActiveSuggestion(-1);
                   }}
                   placeholder="Ex.: Pão de Açúcar, São Paulo..."
+                  className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
                 />
 
                 {visibleSuggestions.length > 0 ? (
-                  <ul id="supermarket-suggestion-list" role="listbox" className="suggestion-list">
+                  <ul
+                    id="supermarket-suggestion-list"
+                    role="listbox"
+                    className="absolute z-20 mt-2 max-h-64 w-full overflow-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl"
+                  >
                     {visibleSuggestions.map((suggestion: Supermarket, index: number) => (
-                      <li key={`${suggestion.id}-${index}`} id={`suggestion-${index}`} role="option">
+                      <li key={`${suggestion.id}-${index}`} id={`suggestion-${index}`} role="option" className="list-none">
                         <button
                           type="button"
-                          className={activeSuggestion === index ? 'active' : ''}
+                          className={[
+                            'flex w-full flex-col items-start rounded-lg px-3 py-2 text-left',
+                            activeSuggestion === index ? 'bg-sky-100' : 'hover:bg-slate-100',
+                          ].join(' ')}
                           onMouseEnter={() => setActiveSuggestion(index)}
                           onClick={() => selectSuggestion(suggestion)}
                         >
-                          <strong>{suggestion.name}</strong>
-                          <span>
+                          <strong className="text-sm text-slate-900">{suggestion.name}</strong>
+                          <span className="text-xs text-slate-500">
                             {suggestion.city}, {suggestion.state}
                           </span>
                         </button>
@@ -176,12 +184,13 @@ export default function SearchSupermarketsPage() {
               </div>
             </div>
 
-            <div className="filter-group">
-              <label htmlFor="city-select">Cidade</label>
+            <div className="space-y-2">
+              <label htmlFor="city-select" className="text-sm font-semibold text-slate-700">Cidade</label>
               <select
                 id="city-select"
                 value={filterCity}
                 onChange={(e) => setFilterCity(e.target.value)}
+                className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
               >
                 <option value="">Todas as cidades</option>
                 {cities.map((city: string) => (
@@ -192,9 +201,14 @@ export default function SearchSupermarketsPage() {
               </select>
             </div>
 
-            <div className="filter-group">
-              <label htmlFor="sort-select">Ordenar por</label>
-              <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} id="sort-select">
+            <div className="space-y-2">
+              <label htmlFor="sort-select" className="text-sm font-semibold text-slate-700">Ordenar por</label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                id="sort-select"
+                className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
+              >
                 <option value="distance">Distância</option>
                 <option value="rating">Avaliação</option>
                 <option value="reviews">Mais avaliado</option>
@@ -202,53 +216,56 @@ export default function SearchSupermarketsPage() {
             </div>
           </div>
 
-          <div className="results-header">
-            <p aria-live="polite">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+            <p aria-live="polite" className="text-sm font-medium text-slate-600">
               {filtered.length} supermercado{filtered.length !== 1 ? 's' : ''} encontrado
               {filtered.length !== 1 ? 's' : ''}
             </p>
           </div>
 
           {filtered.length === 0 ? (
-            <div className="empty-state">
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-900">
               <p>Nenhum supermercado encontrado com esses critérios.</p>
-              <small>Tente alterar os filtros ou buscar por outro termo.</small>
+              <small className="mt-1 block">Tente alterar os filtros ou buscar por outro termo.</small>
             </div>
           ) : (
-            <div className="supermarkets-grid">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {filtered.map((sm: Supermarket) => (
-                <article key={sm.id} className="supermarket-card">
-                  <div className="sm-header">
-                    <h3>{sm.name}</h3>
-                    <div className="sm-rating">
-                      <span className="star">★</span>
-                      <span className="rating-value">{sm.rating}</span>
-                      <span className="reviews-count">({sm.reviews})</span>
+                <article
+                  key={sm.id}
+                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.07)]"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <h3 className="font-['Fraunces'] text-2xl font-semibold text-slate-900">{sm.name}</h3>
+                    <div className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-800">
+                      <span>★</span>
+                      <span>{sm.rating}</span>
+                      <span>({sm.reviews})</span>
                     </div>
                   </div>
 
-                  <p className="sm-location">
+                  <p className="mt-1 text-sm font-semibold text-slate-700">
                     {sm.city}, {sm.state}
                   </p>
-                  <p className="sm-address">{sm.address}</p>
+                  <p className="mt-1 text-sm text-slate-500">{sm.address}</p>
 
-                  <div className="sm-details">
-                    <div className="detail-item">
-                      <span className="label">Distância:</span>
-                      <span className="value">{sm.distance} km</span>
+                  <div className="mt-3 grid gap-2 rounded-xl bg-slate-50 p-3 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-slate-500">Distancia:</span>
+                      <span className="font-semibold text-slate-800">{sm.distance} km</span>
                     </div>
-                    <div className="detail-item">
-                      <span className="label">Horário:</span>
-                      <span className="value">{sm.hours}</span>
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-slate-500">Horario:</span>
+                      <span className="font-semibold text-slate-800">{sm.hours}</span>
                     </div>
                   </div>
 
                   {sm.services && sm.services.length > 0 && (
-                    <div className="sm-services">
-                      <p className="services-label">Serviços:</p>
-                      <div className="services-list">
+                    <div className="mt-3">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Servicos:</p>
+                      <div className="mt-2 flex flex-wrap gap-1.5">
                         {sm.services.map((service: string) => (
-                          <span key={service} className="service-tag">
+                          <span key={service} className="rounded-full bg-sky-100 px-2.5 py-1 text-xs font-semibold text-sky-700">
                             {service}
                           </span>
                         ))}
@@ -256,9 +273,16 @@ export default function SearchSupermarketsPage() {
                     </div>
                   )}
 
-                  <div className="sm-footer">
-                    {sm.hasDelivery && <span className="delivery-badge">📦 Entrega disponível</span>}
-                    <a href={`tel:${sm.phone}`} className="call-link">
+                  <div className="mt-4 flex items-center justify-between gap-3">
+                    {sm.hasDelivery && (
+                      <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                        Entrega disponivel
+                      </span>
+                    )}
+                    <a
+                      href={`tel:${sm.phone}`}
+                      className="rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white transition hover:bg-slate-700"
+                    >
                       Ligar
                     </a>
                   </div>
