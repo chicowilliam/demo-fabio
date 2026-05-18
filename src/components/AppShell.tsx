@@ -1,12 +1,21 @@
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import brandLogo from '../assets/demo-supermercado.svg';
+import { useAuth } from '../context/AuthContext';
 
 function AppShell() {
+  const { logout, user } = useAuth();
+  const navigate = useNavigate();
+
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
     [
       'rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-200',
       isActive ? 'bg-rose-100 text-rose-700 shadow-sm' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
     ].join(' ');
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login', { replace: true });
+  };
 
   return (
     <div className="mx-auto min-h-screen w-full max-w-[1380px] px-4 pb-10 pt-6 md:px-6">
@@ -26,8 +35,18 @@ function AppShell() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-600">
-            Modo aberto para demonstracao
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-600">
+              {user ? `Logado como ${user.name}` : 'Modo aberto para demonstracao'}
+            </div>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700"
+            >
+              Sair
+            </button>
           </div>
         </div>
       </header>
