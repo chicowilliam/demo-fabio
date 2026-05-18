@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo, useState } from 'react';
+import { lazy, Suspense, useMemo, useRef, useState } from 'react';
 import { Compass, MapPin, Search, ShoppingBasket, Sparkles, Store } from 'lucide-react';
 import { supermarkets } from '../data/supermarkets';
 import {
@@ -22,6 +22,7 @@ function ClientRoutePage() {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedBrand, setSelectedBrand] = useState('');
   const [staffMode, setStaffMode] = useState<'picking' | 'restock'>('picking');
+  const routeSectionRef = useRef<HTMLDivElement | null>(null);
 
   const selectedMarket = useMemo(
     () => supermarkets.find((market) => market.id === selectedMarketId) ?? null,
@@ -57,10 +58,7 @@ function ClientRoutePage() {
       .slice(0, 10);
   }, [query, selectedCategory, selectedBrand]);
 
-  const optimized = useMemo(
-    () => navigationEngine.buildRoute({ selectedItemIds }),
-    [selectedItemIds]
-  );
+  const optimized = useMemo(() => navigationEngine.buildRoute({ selectedItemIds }), [selectedItemIds]);
 
   const itemById = useMemo(
     () => new Map<string, ShoppingItem>(shoppingItems.map((item) => [item.id, item])),
@@ -69,15 +67,16 @@ function ClientRoutePage() {
 
   const toggleItem = (itemId: string) => {
     setSelectedItemIds((previous) =>
-      previous.includes(itemId)
-        ? previous.filter((id) => id !== itemId)
-        : [...previous, itemId]
+      previous.includes(itemId) ? previous.filter((id) => id !== itemId) : [...previous, itemId]
     );
   };
 
   const handleOptimize = () => {
     setRouteComputed(true);
     setCompletedIds([]);
+    requestAnimationFrame(() => {
+      routeSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   };
 
   const toggleCompleted = (itemName: string) => {
@@ -134,23 +133,32 @@ function ClientRoutePage() {
   };
 
   return (
-    <section className="client-route-page">
-      <header className="route-page-header">
-        <p className="brand-eyebrow">Rota Guiada</p>
-        <h2>Mapa de percurso para o cliente seguir na loja</h2>
-        <p>
-          Selecione os itens, gere a sequência e acompanhe o caminho no mapa do mercado em tempo
+    <section className="space-y-6">
+      <header className="rounded-3xl border border-amber-100 bg-gradient-to-br from-white to-amber-50 p-6 shadow-[0_14px_35px_rgba(15,23,42,0.1)]">
+        <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-rose-500">Rota Guiada</p>
+        <h2 className="mt-2 font-['Fraunces'] text-3xl font-semibold text-slate-900 sm:text-4xl">
+          Mapa de percurso para o cliente seguir na loja
+        </h2>
+        <p className="mt-3 max-w-3xl text-slate-600">
+          Selecione os itens, gere a sequencia e acompanhe o caminho no mapa do mercado em tempo
           real de progresso.
         </p>
       </header>
 
-      <div className="route-command-bar" role="region" aria-label="Controles de geração de rota">
-        <div className="route-field">
-          <label htmlFor="market">Supermercado</label>
+      <div
+        className="grid gap-4 rounded-3xl border border-slate-200 bg-white p-4 shadow-[0_12px_28px_rgba(15,23,42,0.08)] lg:grid-cols-12"
+        role="region"
+        aria-label="Controles de geracao de rota"
+      >
+        <div className="space-y-2 lg:col-span-3">
+          <label htmlFor="market" className="text-sm font-semibold text-slate-700">
+            Supermercado
+          </label>
           <select
             id="market"
             value={selectedMarketId}
             onChange={(event) => setSelectedMarketId(event.target.value)}
+            className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
           >
             {supermarkets.map((market) => (
               <option key={market.id} value={market.id}>
@@ -159,7 +167,7 @@ function ClientRoutePage() {
             ))}
           </select>
           {selectedMarket ? (
-            <div className="route-market-meta">
+            <div className="inline-flex items-center gap-2 rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700">
               <Store size={14} />
               <span>
                 {selectedMarket.city} · {selectedMarket.distance} km
@@ -168,10 +176,12 @@ function ClientRoutePage() {
           ) : null}
         </div>
 
-        <div className="route-field route-search">
-          <label htmlFor="product-search">Buscar item</label>
-          <div className="route-search-box">
-            <Search size={16} />
+        <div className="space-y-2 lg:col-span-5">
+          <label htmlFor="product-search" className="text-sm font-semibold text-slate-700">
+            Buscar item
+          </label>
+          <div className="flex items-center gap-2 rounded-xl border border-slate-300 px-3 py-2.5 focus-within:border-sky-500 focus-within:ring-2 focus-within:ring-sky-200">
+            <Search size={16} className="text-slate-400" />
             <input
               id="product-search"
               type="text"
@@ -179,27 +189,33 @@ function ClientRoutePage() {
               value={query}
               aria-describedby="route-search-help"
               onChange={(event) => setQuery(event.target.value)}
+              className="w-full bg-transparent text-sm outline-none"
             />
           </div>
           <small id="route-search-help" className="sr-only">
-            Digite para ver sugestões e clique para adicionar item à rota.
+            Digite para ver sugestoes e clique para adicionar item a rota.
           </small>
-          <div className="route-suggestions">
+          <div className="grid max-h-56 gap-2 overflow-auto pr-1 sm:grid-cols-2">
             {filteredItems.map((item) => {
               const selected = selectedItemIds.includes(item.id);
               return (
                 <button
                   key={item.id}
                   type="button"
-                  className={selected ? 'selected' : ''}
+                  className={[
+                    'rounded-xl border p-3 text-left transition',
+                    selected
+                      ? 'border-rose-300 bg-rose-50 text-rose-900'
+                      : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-sky-300 hover:bg-sky-50',
+                  ].join(' ')}
                   aria-pressed={selected}
                   onClick={() => toggleItem(item.id)}
                 >
-                  <strong>{item.name}</strong>
-                  <span>
+                  <strong className="block text-sm">{item.name}</strong>
+                  <span className="block text-xs opacity-80">
                     {item.sectorTitle} - {item.aisle}
                   </span>
-                  <small>
+                  <small className="mt-1 block text-[11px] opacity-75">
                     {item.category} · {item.brand}
                   </small>
                 </button>
@@ -208,12 +224,15 @@ function ClientRoutePage() {
           </div>
         </div>
 
-        <div className="route-field route-filters">
-          <label htmlFor="route-category">Categoria</label>
+        <div className="space-y-2 lg:col-span-2">
+          <label htmlFor="route-category" className="text-sm font-semibold text-slate-700">
+            Categoria
+          </label>
           <select
             id="route-category"
             value={selectedCategory}
             onChange={(event) => setSelectedCategory(event.target.value)}
+            className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
           >
             <option value="">Todas</option>
             {categories.map((category) => (
@@ -223,8 +242,15 @@ function ClientRoutePage() {
             ))}
           </select>
 
-          <label htmlFor="route-brand">Marca</label>
-          <select id="route-brand" value={selectedBrand} onChange={(event) => setSelectedBrand(event.target.value)}>
+          <label htmlFor="route-brand" className="text-sm font-semibold text-slate-700">
+            Marca
+          </label>
+          <select
+            id="route-brand"
+            value={selectedBrand}
+            onChange={(event) => setSelectedBrand(event.target.value)}
+            className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
+          >
             <option value="">Todas</option>
             {brands.map((brand) => (
               <option key={brand} value={brand}>
@@ -236,7 +262,7 @@ function ClientRoutePage() {
 
         <button
           type="button"
-          className="optimize-button"
+          className="inline-flex h-fit items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40 lg:col-span-2"
           onClick={handleOptimize}
           disabled={selectedItemIds.length === 0}
         >
@@ -245,17 +271,21 @@ function ClientRoutePage() {
         </button>
       </div>
 
-      <section className="curated-lists" aria-label="Listas de compras curadas">
+      <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_10px_28px_rgba(15,23,42,0.07)]" aria-label="Listas de compras curadas">
         <header>
-          <h3>Listas curadas por perfil</h3>
-          <p>Monte a cesta por categoria, marca e objetivo de compra.</p>
+          <h3 className="font-['Fraunces'] text-2xl font-semibold text-slate-900">Listas curadas por perfil</h3>
+          <p className="mt-1 text-sm text-slate-600">Monte a cesta por categoria, marca e objetivo de compra.</p>
         </header>
-        <div className="curated-list-grid">
+        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           {curatedLists.map((list) => (
-            <article key={list.id}>
-              <h4>{list.title}</h4>
-              <p>{list.description}</p>
-              <button type="button" onClick={() => applyCuratedList(list.id)}>
+            <article key={list.id} className="rounded-2xl border border-amber-100 bg-amber-50/60 p-4">
+              <h4 className="font-semibold text-slate-900">{list.title}</h4>
+              <p className="mt-2 text-sm text-slate-600">{list.description}</p>
+              <button
+                type="button"
+                onClick={() => applyCuratedList(list.id)}
+                className="mt-3 rounded-lg bg-rose-500 px-3 py-2 text-xs font-bold uppercase tracking-wide text-white transition hover:bg-rose-600"
+              >
                 Aplicar lista
               </button>
             </article>
@@ -263,28 +293,61 @@ function ClientRoutePage() {
         </div>
       </section>
 
-      <div className="route-toolbar">
-        <span aria-live="polite">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
+        <span aria-live="polite" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
           <ShoppingBasket size={16} /> {selectedItemIds.length} itens selecionados
         </span>
-        <button type="button" className="ghost-btn" onClick={clearSelection}>
-          Limpar seleção
+        <button
+          type="button"
+          className="rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+          onClick={clearSelection}
+        >
+          Limpar selecao
         </button>
       </div>
 
-      <div className="route-board">
-        <article className="route-map-card">
-          <header>
-            <h3>
+      {routeComputed && optimized.steps.length > 0 ? (
+        <section
+          className="rounded-3xl border border-emerald-200 bg-emerald-50/70 p-5 shadow-[0_10px_20px_rgba(16,185,129,0.12)]"
+          aria-live="polite"
+        >
+          <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-emerald-700">Rota ativa</p>
+          <h3 className="mt-2 font-['Fraunces'] text-2xl font-semibold text-emerald-950">
+            Trajeto otimizado pronto para execucao
+          </h3>
+          <div className="mt-3 flex flex-wrap gap-2 text-sm font-semibold text-emerald-900">
+            <span className="rounded-full bg-emerald-100 px-3 py-1">{optimized.steps.length} paradas</span>
+            <span className="rounded-full bg-emerald-100 px-3 py-1">{optimized.totalDistance} m estimados</span>
+            <span className="rounded-full bg-emerald-100 px-3 py-1">
+              Proximo: {nextStep ? nextStep.itemName : 'Finalizado'}
+            </span>
+          </div>
+        </section>
+      ) : null}
+
+      <div ref={routeSectionRef} className="grid gap-4 xl:grid-cols-[1.6fr_1fr]">
+        <article
+          className={[
+            'rounded-3xl border bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.08)]',
+            routeComputed ? 'border-emerald-300 ring-2 ring-emerald-100' : 'border-slate-200',
+          ].join(' ')}
+        >
+          <header className="mb-4">
+            <h3 className="inline-flex items-center gap-2 font-['Fraunces'] text-2xl font-semibold text-slate-900">
               <MapPin size={18} /> Mapa de percurso do cliente
             </h3>
-            <p>
-              {selectedMarket ? selectedMarket.name : 'Mercado não selecionado'} - entrada e setores
-              estratégicos
+            <p className="mt-1 text-sm text-slate-600">
+              {selectedMarket ? selectedMarket.name : 'Mercado nao selecionado'} - entrada e setores estrategicos
             </p>
           </header>
 
-          <Suspense fallback={<div className="route-map-loading">Carregando mapa interativo...</div>}>
+          <Suspense
+            fallback={
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-500">
+                Carregando mapa interativo...
+              </div>
+            }
+          >
             <InteractiveStoreMap
               entrance={entrance}
               routeComputed={routeComputed}
@@ -296,60 +359,70 @@ function ClientRoutePage() {
           </Suspense>
         </article>
 
-        <article className="route-steps-card">
+        <article className="rounded-3xl border border-slate-200 bg-white p-4 shadow-[0_10px_28px_rgba(15,23,42,0.08)]">
           <header>
-            <h3>
-              <Compass size={18} /> Sequência recomendada
+            <h3 className="inline-flex items-center gap-2 font-['Fraunces'] text-2xl font-semibold text-slate-900">
+              <Compass size={18} /> Sequencia recomendada
             </h3>
-            <p>Marque os itens conforme for passando no corredor.</p>
+            <p className="mt-1 text-sm text-slate-600">Marque os itens conforme for passando no corredor.</p>
           </header>
 
           {routeComputed && optimized.steps.length > 0 ? (
             <>
-              <div className="route-next-step" aria-live="polite">
-                <strong>Próxima parada:</strong>
+              <div className="mt-4 rounded-2xl bg-slate-100 px-3 py-3 text-sm text-slate-700" aria-live="polite">
+                <strong className="mr-1">Proxima parada:</strong>
                 <span>
-                  {nextStep
-                    ? `${nextStep.itemName} (${nextStep.sectorTitle})`
-                    : 'Rota concluída. Ótimas compras!'}
+                  {nextStep ? `${nextStep.itemName} (${nextStep.sectorTitle})` : 'Rota concluida. Otimas compras!'}
                 </span>
               </div>
 
-              <ul className="route-step-list">
+              <ul className="mt-3 space-y-2">
                 {optimized.steps.map((step) => {
                   const done = completedIds.includes(step.itemName);
                   return (
-                    <li key={`${step.step}-${step.itemName}`} className={done ? 'done' : ''}>
-                      <button type="button" onClick={() => toggleCompleted(step.itemName)}>
-                        <span className="step-index">{step.step}</span>
-                        <span className="step-main">
-                          <strong>{step.itemName}</strong>
-                          <small>
+                    <li
+                      key={`${step.step}-${step.itemName}`}
+                      className={[
+                        'rounded-xl border transition',
+                        done ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 bg-white',
+                      ].join(' ')}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => toggleCompleted(step.itemName)}
+                        className="flex w-full items-center gap-3 px-3 py-2.5 text-left"
+                      >
+                        <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
+                          {step.step}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <strong className="block truncate text-sm text-slate-900">{step.itemName}</strong>
+                          <small className="block truncate text-xs text-slate-500">
                             {step.sectorTitle} - {step.aisle}
                           </small>
                         </span>
-                        <span className="step-distance">{step.distance} m</span>
+                        <span className="text-xs font-semibold text-slate-600">{step.distance} m</span>
                       </button>
                     </li>
                   );
                 })}
               </ul>
 
-              <footer className="route-summary">
-                <span>
-                  <ShoppingBasket size={16} /> {completedIds.length}/{optimized.steps.length} concluídos
+              <footer className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-slate-100 px-3 py-2.5 text-sm">
+                <span className="inline-flex items-center gap-2 font-semibold text-slate-700">
+                  <ShoppingBasket size={16} /> {completedIds.length}/{optimized.steps.length} concluidos
                 </span>
-                <strong>Distância estimada: {optimized.totalDistance} m</strong>
+                <strong className="text-slate-900">Distancia estimada: {optimized.totalDistance} m</strong>
               </footer>
             </>
           ) : (
-            <div className="route-empty">
-              <p>Escolha itens e clique em Gerar rota para visualizar o caminho do cliente.</p>
+            <div className="mt-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-5 text-sm text-slate-500">
+              Escolha itens e clique em Gerar rota para visualizar o caminho do cliente.
             </div>
           )}
 
           {selectedItemIds.length > 0 ? (
-            <div className="route-selected-items">
+            <div className="mt-4 flex flex-wrap gap-2">
               {selectedItemIds.map((itemId) => {
                 const item = itemById.get(itemId);
                 if (!item) {
@@ -357,7 +430,12 @@ function ClientRoutePage() {
                 }
 
                 return (
-                  <button key={itemId} type="button" onClick={() => toggleItem(itemId)}>
+                  <button
+                    key={itemId}
+                    type="button"
+                    onClick={() => toggleItem(itemId)}
+                    className="rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700 transition hover:bg-rose-200"
+                  >
                     {item.name}
                   </button>
                 );
@@ -367,27 +445,35 @@ function ClientRoutePage() {
         </article>
       </div>
 
-      <section className="staff-tools" aria-label="Ferramentas de funcionários">
+      <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_10px_28px_rgba(15,23,42,0.08)]" aria-label="Ferramentas de funcionarios">
         <header>
-          <h3>Operação de funcionários</h3>
-          <p>Use os itens selecionados para separação online e reabastecimento de prateleiras.</p>
+          <h3 className="font-['Fraunces'] text-2xl font-semibold text-slate-900">Operacao de funcionarios</h3>
+          <p className="mt-1 text-sm text-slate-600">
+            Use os itens selecionados para separacao online e reabastecimento de prateleiras.
+          </p>
         </header>
 
-        <div className="staff-mode-switch" role="tablist" aria-label="Modo de operação">
+        <div className="mt-4 inline-flex rounded-xl border border-slate-200 bg-slate-50 p-1" role="tablist" aria-label="Modo de operacao">
           <button
             type="button"
             role="tab"
             aria-selected={staffMode === 'picking'}
-            className={staffMode === 'picking' ? 'active' : ''}
+            className={[
+              'rounded-lg px-3 py-2 text-sm font-semibold transition',
+              staffMode === 'picking' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900',
+            ].join(' ')}
             onClick={() => setStaffMode('picking')}
           >
-            Separação online
+            Separacao online
           </button>
           <button
             type="button"
             role="tab"
             aria-selected={staffMode === 'restock'}
-            className={staffMode === 'restock' ? 'active' : ''}
+            className={[
+              'rounded-lg px-3 py-2 text-sm font-semibold transition',
+              staffMode === 'restock' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900',
+            ].join(' ')}
             onClick={() => setStaffMode('restock')}
           >
             Reabastecimento
@@ -395,56 +481,67 @@ function ClientRoutePage() {
         </div>
 
         {staffMode === 'picking' ? (
-          <ul className="staff-list">
+          <ul className="mt-4 grid gap-2 md:grid-cols-2">
             {operationsQuery.data?.pickingOrder && operationsQuery.data.pickingOrder.length > 0 ? (
               operationsQuery.data.pickingOrder.map((step, index) => (
-                <li key={`${step.aisle}-${step.itemName}-${index}`}>
-                  <strong>{step.itemName}</strong>
-                  <span>{step.sectorTitle} - {step.aisle}</span>
-                  <small>
+                <li
+                  key={`${step.aisle}-${step.itemName}-${index}`}
+                  className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2"
+                >
+                  <strong className="block text-sm text-slate-900">{step.itemName}</strong>
+                  <span className="block text-xs text-slate-500">{step.sectorTitle} - {step.aisle}</span>
+                  <small className="mt-1 block text-xs text-slate-600">
                     Estoque: {step.stock.available} un · status {step.stock.status}
                   </small>
                 </li>
               ))
             ) : optimized.steps.length > 0 ? (
               optimized.steps.map((step) => (
-                <li key={`${step.step}-${step.itemName}`}>
-                  <strong>{step.itemName}</strong>
-                  <span>{step.sectorTitle} - {step.aisle}</span>
+                <li key={`${step.step}-${step.itemName}`} className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                  <strong className="block text-sm text-slate-900">{step.itemName}</strong>
+                  <span className="block text-xs text-slate-500">{step.sectorTitle} - {step.aisle}</span>
                 </li>
               ))
             ) : (
-              <li className="empty">Gere uma rota para exibir a ordem de separação.</li>
+              <li className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-3 py-4 text-sm text-slate-500 md:col-span-2">
+                Gere uma rota para exibir a ordem de separacao.
+              </li>
             )}
           </ul>
         ) : (
-          <ul className="staff-list">
+          <ul className="mt-4 grid gap-2 md:grid-cols-2">
             {operationsQuery.data?.restockQueue && operationsQuery.data.restockQueue.length > 0 ? (
               operationsQuery.data.restockQueue.map((item) => (
-                <li key={item.sector}>
-                  <strong>
+                <li key={item.sector} className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                  <strong className="block text-sm text-slate-900">
                     {item.sector} ({item.aisle})
                   </strong>
-                  <span>
-                    {item.itemCount} item(ns) · críticos: {item.criticalCount} · baixos: {item.lowCount}
+                  <span className="block text-xs text-slate-600">
+                    {item.itemCount} item(ns) · criticos: {item.criticalCount} · baixos: {item.lowCount}
                   </span>
                 </li>
               ))
             ) : restockQueue.length > 0 ? (
               restockQueue.map((item) => (
-                <li key={item.sector}>
-                  <strong>{item.sector}</strong>
-                  <span>{item.count} item(ns) da cesta atual para conferir estoque</span>
+                <li key={item.sector} className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                  <strong className="block text-sm text-slate-900">{item.sector}</strong>
+                  <span className="block text-xs text-slate-600">
+                    {item.count} item(ns) da cesta atual para conferir estoque
+                  </span>
                 </li>
               ))
             ) : (
-              <li className="empty">Selecione itens para priorizar setores de reabastecimento.</li>
+              <li className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-3 py-4 text-sm text-slate-500 md:col-span-2">
+                Selecione itens para priorizar setores de reabastecimento.
+              </li>
             )}
           </ul>
         )}
 
         {operationsQuery.isError ? (
-          <p className="staff-note">Operação API indisponível, exibindo cálculo local temporário.</p>
+          <p className="mt-3 text-xs font-medium text-amber-700">
+            Operacao API indisponivel, exibindo calculo local temporario.
+          </p>
         ) : null}
       </section>
     </section>
