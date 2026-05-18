@@ -7,6 +7,7 @@ const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const SectorPage = lazy(() => import('./pages/SectorPage'));
 const SearchSupermarketsPage = lazy(() => import('./pages/SearchSupermarketsPage'));
 const ClientRoutePage = lazy(() => import('./pages/ClientRoutePage'));
+const AdminPage = lazy(() => import('./pages/AdminPage'));
 
 function App() {
   return (
@@ -45,6 +46,14 @@ function App() {
           element={
             <Suspense fallback={<p>Carregando rota...</p>}>
               <ClientRoutePage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="admin"
+          element={
+            <Suspense fallback={<p>Carregando painel admin...</p>}>
+              <AdminPage />
             </Suspense>
           }
         />
