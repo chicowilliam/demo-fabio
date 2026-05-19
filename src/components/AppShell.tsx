@@ -14,7 +14,7 @@ function AppShell() {
 
   const handleLogout = () => {
     logout();
-    navigate('/login', { replace: true });
+    navigate('/dashboard', { replace: true });
   };
 
   return (
