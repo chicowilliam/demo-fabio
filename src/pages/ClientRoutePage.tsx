@@ -4,6 +4,7 @@ import { supermarkets } from '../data/supermarkets';
 import {
   getEntrancePoint,
   shoppingItems,
+  type OptimizedShoppingRoute,
   type ShoppingItem,
 } from '../lib/clientRoute';
 import { createNavigationEngine } from '../lib/navigationSdk';
@@ -16,8 +17,8 @@ function ClientRoutePage() {
   const [selectedMarketId, setSelectedMarketId] = useState(supermarkets[0]?.id ?? '');
   const [query, setQuery] = useState('');
   const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
-  const [routeComputed, setRouteComputed] = useState(false);
-  const [completedIds, setCompletedIds] = useState<string[]>([]);
+  const [routeSnapshot, setRouteSnapshot] = useState<OptimizedShoppingRoute | null>(null);
+  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedBrand, setSelectedBrand] = useState('');
   const [staffMode, setStaffMode] = useState<'picking' | 'restock'>('picking');
@@ -57,39 +58,64 @@ function ClientRoutePage() {
       .slice(0, 10);
   }, [query, selectedCategory, selectedBrand]);
 
-  const optimized = useMemo(() => navigationEngine.buildRoute({ selectedItemIds }), [selectedItemIds]);
-
   const itemById = useMemo(
     () => new Map<string, ShoppingItem>(shoppingItems.map((item) => [item.id, item])),
     []
   );
 
   const toggleItem = (itemId: string) => {
-    setSelectedItemIds((previous) =>
-      previous.includes(itemId) ? previous.filter((id) => id !== itemId) : [...previous, itemId]
-    );
+    setSelectedItemIds((previous) => {
+      const nextSelection = previous.includes(itemId)
+        ? previous.filter((id) => id !== itemId)
+        : [...previous, itemId];
+
+      // Keep route state consistent with the exact selection used in optimization.
+      setRouteSnapshot(null);
+      setCompletedSteps([]);
+
+      return nextSelection;
+    });
   };
 
   const handleOptimize = () => {
-    setRouteComputed(true);
-    setCompletedIds([]);
+    const nextRoute = navigationEngine.buildRoute({ selectedItemIds });
+    setRouteSnapshot(nextRoute);
+    setCompletedSteps([]);
     requestAnimationFrame(() => {
       routeSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   };
 
-  const toggleCompleted = (itemName: string) => {
-    setCompletedIds((previous) =>
-      previous.includes(itemName)
-        ? previous.filter((name) => name !== itemName)
-        : [...previous, itemName]
-    );
+  const toggleCompleted = (stepNumber: number) => {
+    setCompletedSteps((previous) => {
+      const highestCompleted = previous.length > 0 ? Math.max(...previous) : 0;
+      const isCompleted = previous.includes(stepNumber);
+
+      if (isCompleted) {
+        // Allow undo only on the latest completed step to preserve sequence.
+        if (stepNumber !== highestCompleted) {
+          return previous;
+        }
+        return previous.filter((value) => value !== stepNumber);
+      }
+
+      // Allow completing only the immediate next step.
+      if (stepNumber !== highestCompleted + 1) {
+        return previous;
+      }
+
+      return [...previous, stepNumber];
+    });
   };
 
-  const nextStep = optimized.steps.find((step) => !completedIds.includes(step.itemName));
   const entrance = getEntrancePoint();
+  const routeSteps = routeSnapshot?.steps ?? [];
+  const routeComputed = routeSteps.length > 0;
+  const routeTotalDistance = routeSnapshot?.totalDistance ?? 0;
+  const nextStep = routeSteps.find((step) => !completedSteps.includes(step.step));
+  const lastCompletedStep = completedSteps.length > 0 ? Math.max(...completedSteps) : 0;
 
-  const routePoints = routeComputed ? optimized.polylinePoints : [entrance];
+  const routePoints = routeSnapshot?.polylinePoints ?? [entrance];
 
   const selectedItems = useMemo(
     () => selectedItemIds.map((itemId) => itemById.get(itemId)).filter(Boolean) as ShoppingItem[],
@@ -114,8 +140,8 @@ function ClientRoutePage() {
 
   const clearSelection = () => {
     setSelectedItemIds([]);
-    setCompletedIds([]);
-    setRouteComputed(false);
+    setCompletedSteps([]);
+    setRouteSnapshot(null);
     setQuery('');
   };
 
@@ -243,7 +269,11 @@ function ClientRoutePage() {
             <select
               id="market"
               value={selectedMarketId}
-              onChange={(event) => setSelectedMarketId(event.target.value)}
+              onChange={(event) => {
+                setSelectedMarketId(event.target.value);
+                setCompletedSteps([]);
+                setRouteSnapshot(null);
+              }}
               className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
             >
               {supermarkets.map((market) => (
@@ -316,7 +346,7 @@ function ClientRoutePage() {
         )}
       </section>
 
-      {routeComputed && optimized.steps.length > 0 ? (
+      {routeComputed ? (
         <section
           className="rounded-3xl border border-emerald-200 bg-emerald-50/70 p-5 shadow-[0_10px_20px_rgba(16,185,129,0.12)]"
           aria-live="polite"
@@ -326,8 +356,8 @@ function ClientRoutePage() {
             Trajeto otimizado pronto para execucao
           </h3>
           <div className="mt-3 flex flex-wrap gap-2 text-sm font-semibold text-emerald-900">
-            <span className="rounded-full bg-emerald-100 px-3 py-1">{optimized.steps.length} paradas</span>
-            <span className="rounded-full bg-emerald-100 px-3 py-1">{optimized.totalDistance} m estimados</span>
+            <span className="rounded-full bg-emerald-100 px-3 py-1">{routeSteps.length} paradas</span>
+            <span className="rounded-full bg-emerald-100 px-3 py-1">{routeTotalDistance} m estimados</span>
             <span className="rounded-full bg-emerald-100 px-3 py-1">
               Proximo: {nextStep ? nextStep.itemName : 'Finalizado'}
             </span>
@@ -362,7 +392,7 @@ function ClientRoutePage() {
               entrance={entrance}
               routeComputed={routeComputed}
               routePoints={routePoints}
-              steps={optimized.steps}
+              steps={routeSteps}
               highlightedItemName={nextStep?.itemName}
               marketName={selectedMarket ? selectedMarket.name : 'Mercado'}
             />
@@ -377,7 +407,7 @@ function ClientRoutePage() {
             <p className="mt-1 text-sm text-slate-600">Marque os itens conforme for passando no corredor.</p>
           </header>
 
-          {routeComputed && optimized.steps.length > 0 ? (
+          {routeComputed ? (
             <>
               <div className="mt-4 rounded-2xl bg-slate-100 px-3 py-3 text-sm text-slate-700" aria-live="polite">
                 <strong className="mr-1">Proxima parada:</strong>
@@ -387,9 +417,12 @@ function ClientRoutePage() {
               </div>
 
               <ul className="mt-3 space-y-2">
-                {optimized.steps.map((step) => {
-                  const done = completedIds.includes(step.itemName);
+                {routeSteps.map((step) => {
+                  const done = completedSteps.includes(step.step);
                   const isCheckout = step.itemName === 'Caixa';
+                  const canComplete = !done && step.step === nextStep?.step;
+                  const canUndo = done && step.step === lastCompletedStep;
+                  const isActionable = canComplete || canUndo;
                   return (
                     <li
                       key={`${step.step}-${step.itemName}`}
@@ -406,8 +439,12 @@ function ClientRoutePage() {
                     >
                       <button
                         type="button"
-                        onClick={() => toggleCompleted(step.itemName)}
-                        className="flex w-full items-center gap-3 px-3 py-2.5 text-left"
+                        onClick={() => toggleCompleted(step.step)}
+                        disabled={!isActionable}
+                        className={[
+                          'flex w-full items-center gap-3 px-3 py-2.5 text-left',
+                          isActionable ? 'cursor-pointer' : 'cursor-not-allowed opacity-70',
+                        ].join(' ')}
                       >
                         <span className={[
                           'inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white',
@@ -444,9 +481,9 @@ function ClientRoutePage() {
 
               <footer className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-slate-100 px-3 py-2.5 text-sm">
                 <span className="inline-flex items-center gap-2 font-semibold text-slate-700">
-                  <ShoppingBasket size={16} /> {completedIds.length}/{optimized.steps.length} concluidos
+                  <ShoppingBasket size={16} /> {completedSteps.length}/{routeSteps.length} concluidos
                 </span>
-                <strong className="text-slate-900">Distancia estimada: {optimized.totalDistance} m</strong>
+                <strong className="text-slate-900">Distancia estimada: {routeTotalDistance} m</strong>
               </footer>
             </>
           ) : (
@@ -507,8 +544,8 @@ function ClientRoutePage() {
                   </small>
                 </li>
               ))
-            ) : optimized.steps.length > 0 ? (
-              optimized.steps.map((step) => (
+            ) : routeSteps.length > 0 ? (
+              routeSteps.map((step) => (
                 <li key={`${step.step}-${step.itemName}`} className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
                   <strong className="block text-sm text-slate-900">{step.itemName}</strong>
                   <span className="block text-xs text-slate-500">{step.sectorTitle} - {step.aisle}</span>
