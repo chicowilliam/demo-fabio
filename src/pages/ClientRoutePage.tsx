@@ -1,5 +1,6 @@
 import { lazy, Suspense, useMemo, useRef, useState } from 'react';
-import { Compass, MapPin, Search, ShoppingBasket, Sparkles, Store, X } from 'lucide-react';
+import * as Dialog from '@radix-ui/react-dialog';
+import { Compass, MapPin, Search, ShoppingBasket, SlidersHorizontal, Sparkles, Store, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { supermarkets } from '../data/supermarkets';
 import {
@@ -24,6 +25,7 @@ function ClientRoutePage() {
   const [selectedBrand, setSelectedBrand] = useState('');
   const [staffMode, setStaffMode] = useState<'picking' | 'restock'>('picking');
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
   const routeSectionRef = useRef<HTMLDivElement | null>(null);
 
   const selectedMarket = useMemo(
@@ -40,6 +42,8 @@ function ClientRoutePage() {
     () => Array.from(new Set(shoppingItems.map((item) => item.brand))).sort(),
     []
   );
+
+  const activeFilterCount = Number(Boolean(selectedCategory)) + Number(Boolean(selectedBrand));
 
   const filteredItems = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -161,6 +165,11 @@ function ClientRoutePage() {
     setQuery('');
   };
 
+  const clearFilters = () => {
+    setSelectedCategory('');
+    setSelectedBrand('');
+  };
+
   return (
     <section className="space-y-4 pb-24 sm:space-y-6 sm:pb-8">
       <header className="rounded-3xl border border-amber-100 bg-gradient-to-br from-white to-amber-50 p-6 shadow-[0_14px_35px_rgba(15,23,42,0.1)]">
@@ -179,7 +188,7 @@ function ClientRoutePage() {
         role="region"
         aria-label="Controles de geracao de rota"
       >
-        <div className="mb-4 flex flex-col items-start gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+        <div className="mb-3 grid gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 sm:mb-4 sm:grid-cols-2 sm:items-center sm:justify-between sm:gap-3">
           <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-600">
             <ShoppingBasket size={14} /> {selectedItemIds.length} itens na rota
           </span>
@@ -188,68 +197,155 @@ function ClientRoutePage() {
           </span>
         </div>
 
-        <div className="grid gap-4 xl:grid-cols-[1.5fr_0.8fr]">
+        <div className="grid gap-3 xl:grid-cols-[1.5fr_0.8fr]">
           <div className="space-y-3">
-            <label htmlFor="product-search" className="text-sm font-semibold text-slate-700">
-              Buscar item e montar lista
-            </label>
-            <div className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2.5 focus-within:border-sky-500 focus-within:ring-2 focus-within:ring-sky-200">
-              <Search size={16} className="text-slate-400" />
-              <input
-                id="product-search"
-                type="text"
-                placeholder="Ex.: leite, tomate, arroz"
-                value={query}
-                aria-describedby="route-search-help"
-                onChange={(event) => setQuery(event.target.value)}
-                className="w-full bg-transparent text-sm outline-none"
-              />
+            <div className="space-y-2">
+              <label htmlFor="product-search" className="text-sm font-semibold text-slate-700">
+                Buscar item e montar lista
+              </label>
+              <div className="flex items-center gap-2">
+                <div className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2.5 focus-within:border-sky-500 focus-within:ring-2 focus-within:ring-sky-200">
+                  <Search size={16} className="text-slate-400" />
+                  <input
+                    id="product-search"
+                    type="text"
+                    placeholder="Ex.: leite, tomate, arroz"
+                    value={query}
+                    aria-describedby="route-search-help"
+                    onChange={(event) => setQuery(event.target.value)}
+                    className="w-full min-w-0 bg-transparent text-sm outline-none"
+                  />
+                </div>
+
+                <Dialog.Root open={isFilterDialogOpen} onOpenChange={setIsFilterDialogOpen}>
+                  <Dialog.Trigger asChild>
+                    <button
+                      type="button"
+                      className="inline-flex h-11 shrink-0 items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 text-sm font-semibold text-slate-700 transition hover:border-amber-300 hover:bg-amber-100"
+                    >
+                      <SlidersHorizontal size={16} />
+                      <span className="hidden sm:inline">Filtros</span>
+                      {activeFilterCount > 0 ? (
+                        <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
+                          {activeFilterCount}
+                        </span>
+                      ) : null}
+                    </button>
+                  </Dialog.Trigger>
+
+                  <Dialog.Portal>
+                    <Dialog.Overlay className="fixed inset-0 z-40 bg-slate-950/45 backdrop-blur-[2px]" />
+                    <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[min(92vw,26rem)] -translate-x-1/2 -translate-y-1/2 rounded-3xl border border-amber-100 bg-white p-4 shadow-[0_24px_60px_rgba(15,23,42,0.22)]">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <Dialog.Title className="font-['Fraunces'] text-2xl font-semibold text-slate-900">
+                            Filtrar itens
+                          </Dialog.Title>
+                          <Dialog.Description className="mt-1 text-sm text-slate-600">
+                            Refine a lista por categoria e marca sem ocupar a tela principal.
+                          </Dialog.Description>
+                        </div>
+                        <Dialog.Close asChild>
+                          <button
+                            type="button"
+                            aria-label="Fechar filtros"
+                            className="rounded-xl border border-slate-200 bg-slate-50 p-2 text-slate-600 transition hover:bg-slate-100"
+                          >
+                            <X size={16} />
+                          </button>
+                        </Dialog.Close>
+                      </div>
+
+                      <div className="mt-4 grid gap-3">
+                        <div className="space-y-2">
+                          <label htmlFor="route-category" className="text-sm font-semibold text-slate-700">
+                            Categoria
+                          </label>
+                          <select
+                            id="route-category"
+                            value={selectedCategory}
+                            onChange={(event) => setSelectedCategory(event.target.value)}
+                            className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
+                          >
+                            <option value="">Todas</option>
+                            {categories.map((category) => (
+                              <option key={category} value={category}>
+                                {category}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label htmlFor="route-brand" className="text-sm font-semibold text-slate-700">
+                            Marca
+                          </label>
+                          <select
+                            id="route-brand"
+                            value={selectedBrand}
+                            onChange={(event) => setSelectedBrand(event.target.value)}
+                            className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
+                          >
+                            <option value="">Todas</option>
+                            {brands.map((brand) => (
+                              <option key={brand} value={brand}>
+                                {brand}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 flex items-center justify-between gap-2">
+                        <button
+                          type="button"
+                          onClick={clearFilters}
+                          className="rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                        >
+                          Limpar filtros
+                        </button>
+                        <Dialog.Close asChild>
+                          <button
+                            type="button"
+                            className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-bold text-white transition hover:bg-slate-700"
+                          >
+                            Aplicar
+                          </button>
+                        </Dialog.Close>
+                      </div>
+                    </Dialog.Content>
+                  </Dialog.Portal>
+                </Dialog.Root>
+              </div>
             </div>
+
             <small id="route-search-help" className="sr-only">
               Digite para ver sugestoes e clique para adicionar item a rota.
             </small>
 
-            <div className="grid gap-2 sm:grid-cols-2">
-              <div className="space-y-2">
-                <label htmlFor="route-category" className="text-sm font-semibold text-slate-700">
-                  Categoria
-                </label>
-                <select
-                  id="route-category"
-                  value={selectedCategory}
-                  onChange={(event) => setSelectedCategory(event.target.value)}
-                  className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
-                >
-                  <option value="">Todas</option>
-                  {categories.map((category) => (
-                    <option key={category} value={category}>
-                      {category}
-                    </option>
-                  ))}
-                </select>
+            {activeFilterCount > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {selectedCategory ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-3 py-1 text-[11px] font-semibold text-amber-900">
+                    Categoria: {selectedCategory}
+                  </span>
+                ) : null}
+                {selectedBrand ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-3 py-1 text-[11px] font-semibold text-rose-800">
+                    Marca: {selectedBrand}
+                  </span>
+                ) : null}
               </div>
+            ) : null}
 
-              <div className="space-y-2">
-                <label htmlFor="route-brand" className="text-sm font-semibold text-slate-700">
-                  Marca
-                </label>
-                <select
-                  id="route-brand"
-                  value={selectedBrand}
-                  onChange={(event) => setSelectedBrand(event.target.value)}
-                  className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
-                >
-                  <option value="">Todas</option>
-                  {brands.map((brand) => (
-                    <option key={brand} value={brand}>
-                      {brand}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                {filteredItems.length} sugestoes visiveis
+              </p>
+              {query ? <p className="text-xs text-slate-500">Busca ativa</p> : null}
             </div>
 
-            <div className="grid max-h-72 gap-2 overflow-auto pr-1 sm:grid-cols-2">
+            <div className="grid max-h-72 gap-2 overflow-auto pr-1">
               {filteredItems.map((item) => {
                 const selected = selectedItemIds.includes(item.id);
                 return (
@@ -257,7 +353,7 @@ function ClientRoutePage() {
                     key={item.id}
                     type="button"
                     className={[
-                      'rounded-xl border p-3 text-left transition',
+                      'rounded-xl border px-3 py-2.5 text-left transition',
                       selected
                         ? 'border-rose-300 bg-rose-50 text-rose-900'
                         : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-sky-300 hover:bg-sky-50',
@@ -265,7 +361,12 @@ function ClientRoutePage() {
                     aria-pressed={selected}
                     onClick={() => toggleItem(item.id)}
                   >
-                    <strong className="block text-sm">{item.name}</strong>
+                    <div className="flex items-start justify-between gap-3">
+                      <strong className="block text-sm leading-5">{item.name}</strong>
+                      <span className="rounded-full bg-white/80 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                        {selected ? 'na rota' : 'adicionar'}
+                      </span>
+                    </div>
                     <span className="block text-xs opacity-80">
                       {item.sectorTitle} - {item.aisle}
                     </span>
@@ -317,7 +418,7 @@ function ClientRoutePage() {
               Limpar selecao
             </button>
 
-            <p className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
+            <p className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs leading-5 text-slate-600">
               Dica: monte primeiro a lista e depois gere a rota para obter a sequencia otimizada por corredor.
             </p>
           </aside>
