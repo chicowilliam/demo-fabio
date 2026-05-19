@@ -49,6 +49,8 @@ const sectorPoints: Record<string, MapPoint> = {
   laticinios: { x: 24, y: 60 },
 };
 
+const checkoutPoint: MapPoint = { x: 8, y: 85 };
+
 function distance(a: MapPoint, b: MapPoint) {
   return Math.hypot(a.x - b.x, a.y - b.y);
 }
@@ -164,10 +166,22 @@ export function optimizeShoppingRoute(selectedItemIds: string[]): OptimizedShopp
     previous = item.point;
   });
 
+  // Add mandatory checkout step at the end
+  const checkoutDistance = distance(previous, checkoutPoint);
+  totalDistance += checkoutDistance;
+  steps.push({
+    step: steps.length + 1,
+    itemName: 'Caixa',
+    sectorTitle: 'Finalização',
+    aisle: 'Checkout',
+    distance: Number(checkoutDistance.toFixed(1)),
+    point: checkoutPoint,
+  });
+
   return {
     totalDistance: Number(totalDistance.toFixed(1)),
     steps,
-    polylinePoints: [entrancePoint, ...ordered.map((item) => item.point)],
+    polylinePoints: [entrancePoint, ...ordered.map((item) => item.point), checkoutPoint],
   };
 }
 

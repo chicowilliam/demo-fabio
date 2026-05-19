@@ -395,12 +395,19 @@ function ClientRoutePage() {
               <ul className="mt-3 space-y-2">
                 {optimized.steps.map((step) => {
                   const done = completedIds.includes(step.itemName);
+                  const isCheckout = step.itemName === 'Caixa';
                   return (
                     <li
                       key={`${step.step}-${step.itemName}`}
                       className={[
                         'rounded-xl border transition',
-                        done ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 bg-white',
+                        isCheckout
+                          ? done
+                            ? 'border-purple-300 bg-purple-50'
+                            : 'border-purple-300 bg-purple-100'
+                          : done
+                            ? 'border-emerald-200 bg-emerald-50'
+                            : 'border-slate-200 bg-white',
                       ].join(' ')}
                     >
                       <button
@@ -408,16 +415,33 @@ function ClientRoutePage() {
                         onClick={() => toggleCompleted(step.itemName)}
                         className="flex w-full items-center gap-3 px-3 py-2.5 text-left"
                       >
-                        <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
+                        <span className={[
+                          'inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white',
+                          isCheckout ? 'bg-purple-600' : 'bg-slate-900',
+                        ].join(' ')}>
                           {step.step}
                         </span>
                         <span className="min-w-0 flex-1">
-                          <strong className="block truncate text-sm text-slate-900">{step.itemName}</strong>
-                          <small className="block truncate text-xs text-slate-500">
+                          <strong className={[
+                            'block truncate text-sm',
+                            isCheckout ? 'text-purple-900' : 'text-slate-900',
+                          ].join(' ')}>
+                            {step.itemName}
+                            {isCheckout && <span className="ml-2 text-xs font-bold uppercase tracking-wide text-purple-700">(Obrigatório)</span>}
+                          </strong>
+                          <small className={[
+                            'block truncate text-xs',
+                            isCheckout ? 'text-purple-700' : 'text-slate-500',
+                          ].join(' ')}>
                             {step.sectorTitle} - {step.aisle}
                           </small>
                         </span>
-                        <span className="text-xs font-semibold text-slate-600">{step.distance} m</span>
+                        <span className={[
+                          'text-xs font-semibold',
+                          isCheckout ? 'text-purple-700' : 'text-slate-600',
+                        ].join(' ')}>
+                          {step.distance} m
+                        </span>
                       </button>
                     </li>
                   );
