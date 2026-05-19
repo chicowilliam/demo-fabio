@@ -2,7 +2,6 @@ import { lazy, Suspense, useMemo, useRef, useState } from 'react';
 import { Compass, MapPin, Search, ShoppingBasket, Sparkles, Store } from 'lucide-react';
 import { supermarkets } from '../data/supermarkets';
 import {
-  curatedLists,
   getEntrancePoint,
   shoppingItems,
   type ShoppingItem,
@@ -112,18 +111,6 @@ function ClientRoutePage() {
     staffMode,
     selectedItems.map((item) => item.name)
   );
-
-  const applyCuratedList = (listId: string) => {
-    const list = curatedLists.find((item) => item.id === listId);
-    if (!list) {
-      return;
-    }
-
-    const curatedItemIds = shoppingItems.filter(list.match).map((item) => item.id);
-    setSelectedItemIds(curatedItemIds.slice(0, 12));
-    setRouteComputed(false);
-    setCompletedIds([]);
-  };
 
   const clearSelection = () => {
     setSelectedItemIds([]);
@@ -291,36 +278,43 @@ function ClientRoutePage() {
         </div>
       </div>
 
-      <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_10px_28px_rgba(15,23,42,0.07)]" aria-label="Listas de compras curadas">
-        <header>
-          <h3 className="font-['Fraunces'] text-2xl font-semibold text-slate-900">Listas curadas por perfil</h3>
-          <p className="mt-1 text-sm text-slate-600">Monte a cesta por categoria, marca e objetivo de compra.</p>
-        </header>
-        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          {curatedLists.map((list) => (
-            <article key={list.id} className="rounded-2xl border border-amber-100 bg-amber-50/60 p-4">
-              <h4 className="font-semibold text-slate-900">{list.title}</h4>
-              <p className="mt-2 text-sm text-slate-600">{list.description}</p>
-              <button
-                type="button"
-                onClick={() => applyCuratedList(list.id)}
-                className="mt-3 rounded-lg bg-rose-500 px-3 py-2 text-xs font-bold uppercase tracking-wide text-white transition hover:bg-rose-600"
-              >
-                Aplicar lista
-              </button>
-            </article>
-          ))}
+      <section className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.06)]" aria-label="Resumo do carrinho">
+        <div className="flex items-start gap-3 sm:items-center">
+          <div className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-900 text-white">
+            <ShoppingBasket size={20} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-slate-900">Carrinho da rota</p>
+            <p aria-live="polite" className="text-xs text-slate-600">
+              {selectedItemIds.length} {selectedItemIds.length === 1 ? 'item selecionado' : 'itens selecionados'}
+            </p>
+          </div>
         </div>
-      </section>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
-        <span aria-live="polite" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
-          <ShoppingBasket size={16} /> {selectedItemIds.length} itens selecionados
-        </span>
-        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-          Selecao em andamento
-        </span>
-      </div>
+        {selectedItemIds.length > 0 ? (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {selectedItemIds.map((itemId) => {
+              const item = itemById.get(itemId);
+              if (!item) {
+                return null;
+              }
+
+              return (
+                <button
+                  key={itemId}
+                  type="button"
+                  onClick={() => toggleItem(itemId)}
+                  className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700 transition hover:bg-rose-100"
+                >
+                  {item.name}
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="mt-3 text-xs text-slate-500">Seu carrinho ainda esta vazio.</p>
+        )}
+      </section>
 
       {routeComputed && optimized.steps.length > 0 ? (
         <section
@@ -460,28 +454,6 @@ function ClientRoutePage() {
               Escolha itens e clique em Gerar rota para visualizar o caminho do cliente.
             </div>
           )}
-
-          {selectedItemIds.length > 0 ? (
-            <div className="mt-4 flex flex-wrap gap-2">
-              {selectedItemIds.map((itemId) => {
-                const item = itemById.get(itemId);
-                if (!item) {
-                  return null;
-                }
-
-                return (
-                  <button
-                    key={itemId}
-                    type="button"
-                    onClick={() => toggleItem(itemId)}
-                    className="rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700 transition hover:bg-rose-200"
-                  >
-                    {item.name}
-                  </button>
-                );
-              })}
-            </div>
-          ) : null}
         </article>
       </div>
 

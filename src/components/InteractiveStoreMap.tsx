@@ -95,7 +95,7 @@ export default function InteractiveStoreMap({
 }: InteractiveStoreMapProps) {
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
-  const [is3DMode, setIs3DMode] = useState(false);
+  const [is3DMode, setIs3DMode] = useState(true);
   const [activePoiId, setActivePoiId] = useState<string>('entrada');
   const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string>('Todas');
