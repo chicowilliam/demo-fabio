@@ -1,9 +1,7 @@
 import { Suspense, lazy } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import AppShell from './components/AppShell';
-import ProtectedRoute from './components/ProtectedRoute';
 import LandingPage from './pages/LandingPage';
-import LoginPage from './pages/LoginPage';
 
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const SectorPage = lazy(() => import('./pages/SectorPage'));
@@ -16,15 +14,11 @@ function App() {
     <Routes>
       {/* Public Routes */}
       <Route path="/" element={<LandingPage />} />
-      <Route path="/login" element={<LoginPage />} />
+      <Route path="/login" element={<Navigate to="/dashboard" replace />} />
 
       <Route
         path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <AppShell />
-          </ProtectedRoute>
-        }
+        element={<AppShell />}
       >
         <Route
           index
