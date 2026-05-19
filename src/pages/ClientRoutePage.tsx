@@ -146,129 +146,149 @@ function ClientRoutePage() {
       </header>
 
       <div
-        className="grid gap-4 rounded-3xl border border-slate-200 bg-white p-4 shadow-[0_12px_28px_rgba(15,23,42,0.08)] lg:grid-cols-12"
+        className="rounded-3xl border border-slate-200 bg-white p-4 shadow-[0_12px_28px_rgba(15,23,42,0.08)] sm:p-5"
         role="region"
         aria-label="Controles de geracao de rota"
       >
-        <div className="space-y-2 lg:col-span-3">
-          <label htmlFor="market" className="text-sm font-semibold text-slate-700">
-            Supermercado
-          </label>
-          <select
-            id="market"
-            value={selectedMarketId}
-            onChange={(event) => setSelectedMarketId(event.target.value)}
-            className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
-          >
-            {supermarkets.map((market) => (
-              <option key={market.id} value={market.id}>
-                {market.name} - {market.city}
-              </option>
-            ))}
-          </select>
-          {selectedMarket ? (
-            <div className="inline-flex items-center gap-2 rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700">
-              <Store size={14} />
-              <span>
-                {selectedMarket.city} · {selectedMarket.distance} km
-              </span>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5">
+          <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-600">
+            <ShoppingBasket size={14} /> {selectedItemIds.length} itens na rota
+          </span>
+          <span className="inline-flex items-center gap-2 text-xs font-semibold text-slate-600">
+            <Store size={14} /> {selectedMarket ? `${selectedMarket.city} · ${selectedMarket.distance} km` : 'Mercado nao definido'}
+          </span>
+        </div>
+
+        <div className="grid gap-4 xl:grid-cols-[1.5fr_0.8fr]">
+          <div className="space-y-3">
+            <label htmlFor="product-search" className="text-sm font-semibold text-slate-700">
+              Buscar item e montar lista
+            </label>
+            <div className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2.5 focus-within:border-sky-500 focus-within:ring-2 focus-within:ring-sky-200">
+              <Search size={16} className="text-slate-400" />
+              <input
+                id="product-search"
+                type="text"
+                placeholder="Ex.: leite, tomate, arroz"
+                value={query}
+                aria-describedby="route-search-help"
+                onChange={(event) => setQuery(event.target.value)}
+                className="w-full bg-transparent text-sm outline-none"
+              />
             </div>
-          ) : null}
-        </div>
+            <small id="route-search-help" className="sr-only">
+              Digite para ver sugestoes e clique para adicionar item a rota.
+            </small>
 
-        <div className="space-y-2 lg:col-span-5">
-          <label htmlFor="product-search" className="text-sm font-semibold text-slate-700">
-            Buscar item
-          </label>
-          <div className="flex items-center gap-2 rounded-xl border border-slate-300 px-3 py-2.5 focus-within:border-sky-500 focus-within:ring-2 focus-within:ring-sky-200">
-            <Search size={16} className="text-slate-400" />
-            <input
-              id="product-search"
-              type="text"
-              placeholder="Ex.: leite, tomate, arroz"
-              value={query}
-              aria-describedby="route-search-help"
-              onChange={(event) => setQuery(event.target.value)}
-              className="w-full bg-transparent text-sm outline-none"
-            />
-          </div>
-          <small id="route-search-help" className="sr-only">
-            Digite para ver sugestoes e clique para adicionar item a rota.
-          </small>
-          <div className="grid max-h-56 gap-2 overflow-auto pr-1 sm:grid-cols-2">
-            {filteredItems.map((item) => {
-              const selected = selectedItemIds.includes(item.id);
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  className={[
-                    'rounded-xl border p-3 text-left transition',
-                    selected
-                      ? 'border-rose-300 bg-rose-50 text-rose-900'
-                      : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-sky-300 hover:bg-sky-50',
-                  ].join(' ')}
-                  aria-pressed={selected}
-                  onClick={() => toggleItem(item.id)}
+            <div className="grid gap-2 sm:grid-cols-2">
+              <div className="space-y-2">
+                <label htmlFor="route-category" className="text-sm font-semibold text-slate-700">
+                  Categoria
+                </label>
+                <select
+                  id="route-category"
+                  value={selectedCategory}
+                  onChange={(event) => setSelectedCategory(event.target.value)}
+                  className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
                 >
-                  <strong className="block text-sm">{item.name}</strong>
-                  <span className="block text-xs opacity-80">
-                    {item.sectorTitle} - {item.aisle}
-                  </span>
-                  <small className="mt-1 block text-[11px] opacity-75">
-                    {item.category} · {item.brand}
-                  </small>
-                </button>
-              );
-            })}
+                  <option value="">Todas</option>
+                  {categories.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="route-brand" className="text-sm font-semibold text-slate-700">
+                  Marca
+                </label>
+                <select
+                  id="route-brand"
+                  value={selectedBrand}
+                  onChange={(event) => setSelectedBrand(event.target.value)}
+                  className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
+                >
+                  <option value="">Todas</option>
+                  {brands.map((brand) => (
+                    <option key={brand} value={brand}>
+                      {brand}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="grid max-h-64 gap-2 overflow-auto pr-1 sm:grid-cols-2">
+              {filteredItems.map((item) => {
+                const selected = selectedItemIds.includes(item.id);
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={[
+                      'rounded-xl border p-3 text-left transition',
+                      selected
+                        ? 'border-rose-300 bg-rose-50 text-rose-900'
+                        : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-sky-300 hover:bg-sky-50',
+                    ].join(' ')}
+                    aria-pressed={selected}
+                    onClick={() => toggleItem(item.id)}
+                  >
+                    <strong className="block text-sm">{item.name}</strong>
+                    <span className="block text-xs opacity-80">
+                      {item.sectorTitle} - {item.aisle}
+                    </span>
+                    <small className="mt-1 block text-[11px] opacity-75">
+                      {item.category} · {item.brand}
+                    </small>
+                  </button>
+                );
+              })}
+            </div>
           </div>
+
+          <aside className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-3">
+            <label htmlFor="market" className="text-sm font-semibold text-slate-700">
+              Supermercado
+            </label>
+            <select
+              id="market"
+              value={selectedMarketId}
+              onChange={(event) => setSelectedMarketId(event.target.value)}
+              className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
+            >
+              {supermarkets.map((market) => (
+                <option key={market.id} value={market.id}>
+                  {market.name} - {market.city}
+                </option>
+              ))}
+            </select>
+
+            <button
+              type="button"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+              onClick={handleOptimize}
+              disabled={selectedItemIds.length === 0}
+            >
+              <Sparkles size={16} />
+              Gerar rota
+            </button>
+
+            <button
+              type="button"
+              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-white"
+              onClick={clearSelection}
+            >
+              Limpar selecao
+            </button>
+
+            <p className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
+              Dica: monte primeiro a lista e depois gere a rota para obter a sequencia otimizada por corredor.
+            </p>
+          </aside>
         </div>
-
-        <div className="space-y-2 lg:col-span-2">
-          <label htmlFor="route-category" className="text-sm font-semibold text-slate-700">
-            Categoria
-          </label>
-          <select
-            id="route-category"
-            value={selectedCategory}
-            onChange={(event) => setSelectedCategory(event.target.value)}
-            className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
-          >
-            <option value="">Todas</option>
-            {categories.map((category) => (
-              <option key={category} value={category}>
-                {category}
-              </option>
-            ))}
-          </select>
-
-          <label htmlFor="route-brand" className="text-sm font-semibold text-slate-700">
-            Marca
-          </label>
-          <select
-            id="route-brand"
-            value={selectedBrand}
-            onChange={(event) => setSelectedBrand(event.target.value)}
-            className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
-          >
-            <option value="">Todas</option>
-            {brands.map((brand) => (
-              <option key={brand} value={brand}>
-                {brand}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <button
-          type="button"
-          className="inline-flex h-fit items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40 lg:col-span-2"
-          onClick={handleOptimize}
-          disabled={selectedItemIds.length === 0}
-        >
-          <Sparkles size={16} />
-          Gerar rota
-        </button>
       </div>
 
       <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_10px_28px_rgba(15,23,42,0.07)]" aria-label="Listas de compras curadas">
@@ -297,13 +317,9 @@ function ClientRoutePage() {
         <span aria-live="polite" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
           <ShoppingBasket size={16} /> {selectedItemIds.length} itens selecionados
         </span>
-        <button
-          type="button"
-          className="rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-          onClick={clearSelection}
-        >
-          Limpar selecao
-        </button>
+        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+          Selecao em andamento
+        </span>
       </div>
 
       {routeComputed && optimized.steps.length > 0 ? (
