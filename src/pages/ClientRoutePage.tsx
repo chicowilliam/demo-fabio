@@ -1,5 +1,6 @@
 import { lazy, Suspense, useMemo, useRef, useState } from 'react';
-import { Compass, MapPin, Search, ShoppingBasket, Sparkles, Store } from 'lucide-react';
+import { Compass, MapPin, Search, ShoppingBasket, Sparkles, Store, X } from 'lucide-react';
+import { toast } from 'sonner';
 import { supermarkets } from '../data/supermarkets';
 import {
   getEntrancePoint,
@@ -22,6 +23,7 @@ function ClientRoutePage() {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedBrand, setSelectedBrand] = useState('');
   const [staffMode, setStaffMode] = useState<'picking' | 'restock'>('picking');
+  const [isCartOpen, setIsCartOpen] = useState(false);
   const routeSectionRef = useRef<HTMLDivElement | null>(null);
 
   const selectedMarket = useMemo(
@@ -65,6 +67,7 @@ function ClientRoutePage() {
 
   const toggleItem = (itemId: string) => {
     setSelectedItemIds((previous) => {
+      const isRemoving = previous.includes(itemId);
       const nextSelection = previous.includes(itemId)
         ? previous.filter((id) => id !== itemId)
         : [...previous, itemId];
@@ -72,6 +75,12 @@ function ClientRoutePage() {
       // Keep route state consistent with the exact selection used in optimization.
       setRouteSnapshot(null);
       setCompletedSteps([]);
+      if (!isRemoving) {
+        setIsCartOpen(true);
+      }
+      if (isRemoving && nextSelection.length === 0) {
+        setIsCartOpen(false);
+      }
 
       return nextSelection;
     });
@@ -79,8 +88,14 @@ function ClientRoutePage() {
 
   const handleOptimize = () => {
     const nextRoute = navigationEngine.buildRoute({ selectedItemIds });
+    if (nextRoute.steps.length === 0) {
+      toast.error('Selecione itens para gerar a rota.');
+      return;
+    }
+
     setRouteSnapshot(nextRoute);
     setCompletedSteps([]);
+    toast.success(`Rota gerada com ${nextRoute.steps.length} paradas e ${nextRoute.totalDistance} m.`);
     requestAnimationFrame(() => {
       routeSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
@@ -142,11 +157,12 @@ function ClientRoutePage() {
     setSelectedItemIds([]);
     setCompletedSteps([]);
     setRouteSnapshot(null);
+    setIsCartOpen(false);
     setQuery('');
   };
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-4 pb-24 sm:space-y-6 sm:pb-8">
       <header className="rounded-3xl border border-amber-100 bg-gradient-to-br from-white to-amber-50 p-6 shadow-[0_14px_35px_rgba(15,23,42,0.1)]">
         <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-rose-500">Rota Guiada</p>
         <h2 className="mt-2 font-['Fraunces'] text-3xl font-semibold text-slate-900 sm:text-4xl">
@@ -159,11 +175,11 @@ function ClientRoutePage() {
       </header>
 
       <div
-        className="rounded-3xl border border-slate-200 bg-white p-4 shadow-[0_12px_28px_rgba(15,23,42,0.08)] sm:p-5"
+        className="rounded-3xl border border-slate-200 bg-white p-3 shadow-[0_12px_28px_rgba(15,23,42,0.08)] sm:p-5"
         role="region"
         aria-label="Controles de geracao de rota"
       >
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5">
+        <div className="mb-4 flex flex-col items-start gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
           <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-600">
             <ShoppingBasket size={14} /> {selectedItemIds.length} itens na rota
           </span>
@@ -233,7 +249,7 @@ function ClientRoutePage() {
               </div>
             </div>
 
-            <div className="grid max-h-64 gap-2 overflow-auto pr-1 sm:grid-cols-2">
+            <div className="grid max-h-72 gap-2 overflow-auto pr-1 sm:grid-cols-2">
               {filteredItems.map((item) => {
                 const selected = selectedItemIds.includes(item.id);
                 return (
@@ -307,44 +323,6 @@ function ClientRoutePage() {
           </aside>
         </div>
       </div>
-
-      <section className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.06)]" aria-label="Resumo do carrinho">
-        <div className="flex items-start gap-3 sm:items-center">
-          <div className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-900 text-white">
-            <ShoppingBasket size={20} />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-slate-900">Carrinho da rota</p>
-            <p aria-live="polite" className="text-xs text-slate-600">
-              {selectedItemIds.length} {selectedItemIds.length === 1 ? 'item selecionado' : 'itens selecionados'}
-            </p>
-          </div>
-        </div>
-
-        {selectedItemIds.length > 0 ? (
-          <div className="mt-3 flex flex-wrap gap-2">
-            {selectedItemIds.map((itemId) => {
-              const item = itemById.get(itemId);
-              if (!item) {
-                return null;
-              }
-
-              return (
-                <button
-                  key={itemId}
-                  type="button"
-                  onClick={() => toggleItem(itemId)}
-                  className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700 transition hover:bg-rose-100"
-                >
-                  {item.name}
-                </button>
-              );
-            })}
-          </div>
-        ) : (
-          <p className="mt-3 text-xs text-slate-500">Seu carrinho ainda esta vazio.</p>
-        )}
-      </section>
 
       {routeComputed ? (
         <section
@@ -492,6 +470,78 @@ function ClientRoutePage() {
             </div>
           )}
         </article>
+      </div>
+
+      <div className="fixed bottom-4 right-4 z-40 flex flex-col items-end gap-2 sm:bottom-6 sm:right-6" aria-label="Carrinho flutuante">
+        {isCartOpen ? (
+          <section className="w-[min(92vw,22rem)] rounded-2xl border border-rose-100 bg-white p-3 shadow-[0_18px_40px_rgba(15,23,42,0.22)]">
+            <header className="flex items-center justify-between gap-2">
+              <div>
+                <p className="text-sm font-semibold text-slate-900">Carrinho da rota</p>
+                <p aria-live="polite" className="text-xs text-slate-600">
+                  {selectedItemIds.length}{' '}
+                  {selectedItemIds.length === 1 ? 'item selecionado' : 'itens selecionados'}
+                </p>
+              </div>
+              <button
+                type="button"
+                aria-label="Fechar carrinho"
+                onClick={() => setIsCartOpen(false)}
+                className="rounded-lg border border-slate-200 bg-slate-50 p-1.5 text-slate-600 transition hover:bg-slate-100"
+              >
+                <X size={14} />
+              </button>
+            </header>
+
+            {selectedItemIds.length > 0 ? (
+              <div className="mt-3 flex max-h-40 flex-wrap gap-2 overflow-auto pr-1">
+                {selectedItemIds.map((itemId) => {
+                  const item = itemById.get(itemId);
+                  if (!item) {
+                    return null;
+                  }
+
+                  return (
+                    <button
+                      key={itemId}
+                      type="button"
+                      onClick={() => toggleItem(itemId)}
+                      className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700 transition hover:bg-rose-100"
+                    >
+                      {item.name}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="mt-3 text-xs text-slate-500">Seu carrinho ainda esta vazio.</p>
+            )}
+
+            <button
+              type="button"
+              onClick={handleOptimize}
+              disabled={selectedItemIds.length === 0}
+              className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-rose-500 to-amber-500 px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <Sparkles size={15} /> Gerar rota agora
+            </button>
+          </section>
+        ) : null}
+
+        <button
+          type="button"
+          aria-expanded={isCartOpen}
+          aria-label="Abrir carrinho da rota"
+          onClick={() => setIsCartOpen((previous) => !previous)}
+          className="relative inline-flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-rose-500 to-amber-500 text-white shadow-[0_10px_30px_rgba(244,63,94,0.35)] transition hover:scale-105"
+        >
+          <ShoppingBasket size={22} />
+          {selectedItemIds.length > 0 ? (
+            <span className="absolute -right-1 -top-1 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full border border-white bg-slate-900 px-1 text-[10px] font-bold leading-none text-white">
+              {selectedItemIds.length > 99 ? '99+' : selectedItemIds.length}
+            </span>
+          ) : null}
+        </button>
       </div>
 
       <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_10px_28px_rgba(15,23,42,0.08)]" aria-label="Ferramentas de funcionarios">

@@ -121,7 +121,7 @@ export default function InteractiveStoreMap({
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-7" role="toolbar" aria-label="Controles do mapa">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-7" role="toolbar" aria-label="Controles do mapa">
         <button
           type="button"
           onClick={onZoomIn}
@@ -222,7 +222,7 @@ export default function InteractiveStoreMap({
         >
           <svg
             viewBox="0 0 100 100"
-            className="h-[460px] w-full rounded-2xl bg-[radial-gradient(circle_at_20%_20%,#f8fafc_0%,#eef2ff_55%,#e2e8f0_100%)] sm:h-[540px]"
+            className="h-[340px] w-full rounded-2xl bg-[radial-gradient(circle_at_20%_20%,#f8fafc_0%,#eef2ff_55%,#e2e8f0_100%)] sm:h-[540px]"
             role="img"
             aria-label={`Mapa interativo da loja ${marketName}. Use os controles para zoom, rotacao e modo 3D.`}
           >
