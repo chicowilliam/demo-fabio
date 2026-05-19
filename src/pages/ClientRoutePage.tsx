@@ -93,13 +93,12 @@ function ClientRoutePage() {
   const handleOptimize = () => {
     const nextRoute = navigationEngine.buildRoute({ selectedItemIds });
     if (nextRoute.steps.length === 0) {
-      toast.error('Selecione itens para gerar a rota.');
       return;
     }
 
     setRouteSnapshot(nextRoute);
     setCompletedSteps([]);
-    toast.success(`Rota gerada com ${nextRoute.steps.length} paradas e ${nextRoute.totalDistance} m.`);
+    toast.success('Rota pronta.');
     requestAnimationFrame(() => {
       routeSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
@@ -617,15 +616,6 @@ function ClientRoutePage() {
             ) : (
               <p className="mt-3 text-xs text-slate-500">Seu carrinho ainda esta vazio.</p>
             )}
-
-            <button
-              type="button"
-              onClick={handleOptimize}
-              disabled={selectedItemIds.length === 0}
-              className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-rose-500 to-amber-500 px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              <Sparkles size={15} /> Gerar rota agora
-            </button>
           </section>
         ) : null}
 
