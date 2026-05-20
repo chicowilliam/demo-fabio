@@ -236,7 +236,7 @@ export default function InteractiveStoreMap({
 
           <svg
             viewBox="0 0 100 100"
-            className="h-[340px] w-full rounded-2xl bg-[radial-gradient(circle_at_20%_20%,#f8fafc_0%,#eef2ff_55%,#e2e8f0_100%)] sm:h-[540px]"
+            className="h-[460px] w-full rounded-2xl bg-[radial-gradient(circle_at_20%_20%,#f8fafc_0%,#eef2ff_55%,#e2e8f0_100%)] sm:h-[560px]"
             role="img"
             aria-label={`Mapa interativo da loja ${marketName}. Clique nos pontos para acompanhar a navegacao.`}
           >
