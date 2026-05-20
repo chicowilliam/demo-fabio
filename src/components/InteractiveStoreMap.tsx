@@ -98,6 +98,7 @@ export default function InteractiveStoreMap({
   const [is3DMode, setIs3DMode] = useState(true);
   const [activePoiId, setActivePoiId] = useState<string>('entrada');
   const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false);
+  const [isMobilePoiPanelOpen, setIsMobilePoiPanelOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string>('Todas');
 
   const categories = useMemo(
@@ -121,7 +122,7 @@ export default function InteractiveStoreMap({
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-7" role="toolbar" aria-label="Controles do mapa">
+      <div className="hidden grid-cols-2 gap-2 sm:grid sm:grid-cols-3 lg:grid-cols-7" role="toolbar" aria-label="Controles do mapa">
         <button
           type="button"
           onClick={onZoomIn}
@@ -220,11 +221,24 @@ export default function InteractiveStoreMap({
             is3DMode ? 'shadow-[0_22px_42px_rgba(30,41,59,0.2)]' : '',
           ].join(' ')}
         >
+          <div className="mb-2 flex items-center justify-end sm:hidden">
+            <button
+              type="button"
+              onClick={() => setIsMobilePoiPanelOpen((current) => !current)}
+              aria-expanded={isMobilePoiPanelOpen}
+              aria-controls="mobile-poi-panel"
+              className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-sky-300 bg-sky-100 text-sky-800 shadow-[0_8px_20px_rgba(14,116,144,0.22)] transition hover:scale-105"
+            >
+              <MapPin size={18} />
+              <span className="sr-only">Clique para abrir pontos de interesse</span>
+            </button>
+          </div>
+
           <svg
             viewBox="0 0 100 100"
             className="h-[340px] w-full rounded-2xl bg-[radial-gradient(circle_at_20%_20%,#f8fafc_0%,#eef2ff_55%,#e2e8f0_100%)] sm:h-[540px]"
             role="img"
-            aria-label={`Mapa interativo da loja ${marketName}. Use os controles para zoom, rotacao e modo 3D.`}
+            aria-label={`Mapa interativo da loja ${marketName}. Clique nos pontos para acompanhar a navegacao.`}
           >
             <defs>
               <linearGradient id="shelfFace" x1="0" y1="0" x2="1" y2="1">
@@ -391,9 +405,39 @@ export default function InteractiveStoreMap({
           <div className="mt-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-center text-xs font-medium text-slate-600">
             Layout de prateleiras com mais profundidade visual e foco em navegacao do cliente
           </div>
+
+          {isMobilePoiPanelOpen ? (
+            <aside
+              id="mobile-poi-panel"
+              className="mt-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_10px_24px_rgba(15,23,42,0.08)] sm:hidden"
+              aria-label="Pontos de interesse mobile"
+            >
+              <h4 className="inline-flex items-center gap-2 text-lg font-semibold text-slate-900">
+                <MapPin size={16} /> Pontos
+              </h4>
+              <ul className="mt-3 grid grid-cols-2 gap-2">
+                {pois.map((poi) => (
+                  <li key={`${poi.id}-mobile`} className="list-none">
+                    <button
+                      type="button"
+                      className={[
+                        'inline-flex h-11 w-full items-center justify-center rounded-full border text-xs font-semibold transition',
+                        activePoiId === poi.id
+                          ? 'border-sky-300 bg-sky-100 text-sky-900'
+                          : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100',
+                      ].join(' ')}
+                      onClick={() => setActivePoiId(poi.id)}
+                    >
+                      {poi.label}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </aside>
+          ) : null}
         </div>
 
-        <aside className="rounded-3xl border border-slate-200 bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.08)]" aria-label="Pontos de interesse">
+        <aside className="hidden rounded-3xl border border-slate-200 bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.08)] sm:block" aria-label="Pontos de interesse">
           <h4 className="inline-flex items-center gap-2 font-['Fraunces'] text-2xl font-semibold text-slate-900">
             <MapPin size={16} /> Pontos de interesse
           </h4>
