@@ -32,3 +32,15 @@
     @apply outline-none ring-2 ring-sky-300 ring-offset-2;
   }
 }
+
+@layer components {
+  @media (max-width: 639px) {
+    .route-mobile-scale {
+      font-size: 115%;
+    }
+
+    .route-mobile-scale :is(p, span, small, label, input, select, button, strong, li) {
+      font-size: inherit !important;
+    }
+  }
+}

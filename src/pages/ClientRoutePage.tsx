@@ -170,7 +170,7 @@ function ClientRoutePage() {
   };
 
   return (
-    <section className="space-y-4 pb-24 sm:space-y-6 sm:pb-8">
+    <section className="route-mobile-scale space-y-4 pb-24 sm:space-y-6 sm:pb-8">
       <header className="rounded-3xl border border-amber-100 bg-gradient-to-br from-white to-amber-50 p-6 shadow-[0_14px_35px_rgba(15,23,42,0.1)]">
         <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-rose-500">Rota Guiada</p>
         <h2 className="mt-2 font-['Fraunces'] text-3xl font-semibold text-slate-900 sm:text-4xl">
@@ -312,6 +312,75 @@ function ClientRoutePage() {
                           </button>
                         </Dialog.Close>
                       </div>
+                    </Dialog.Content>
+                  </Dialog.Portal>
+                </Dialog.Root>
+
+                <Dialog.Root open={isCartOpen} onOpenChange={setIsCartOpen}>
+                  <Dialog.Trigger asChild>
+                    <button
+                      type="button"
+                      className="inline-flex h-11 shrink-0 items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 text-sm font-semibold text-slate-700 transition hover:border-rose-300 hover:bg-rose-100 sm:hidden"
+                    >
+                      <ShoppingBasket size={16} />
+                      <span>Carrinho</span>
+                      {selectedItemIds.length > 0 ? (
+                        <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-slate-900 px-1 text-[10px] font-bold text-white">
+                          {selectedItemIds.length > 99 ? '99+' : selectedItemIds.length}
+                        </span>
+                      ) : null}
+                    </button>
+                  </Dialog.Trigger>
+
+                  <Dialog.Portal>
+                    <Dialog.Overlay className="fixed inset-0 z-40 bg-slate-950/45 backdrop-blur-[2px] sm:hidden" />
+                    <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[min(92vw,26rem)] -translate-x-1/2 -translate-y-1/2 rounded-3xl border border-rose-100 bg-white p-4 shadow-[0_24px_60px_rgba(15,23,42,0.22)] sm:hidden">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <Dialog.Title className="font-['Fraunces'] text-2xl font-semibold text-slate-900">
+                            Carrinho da rota
+                          </Dialog.Title>
+                          <Dialog.Description className="mt-1 text-sm text-slate-600">
+                            Revise os itens e remova o que nao quiser.
+                          </Dialog.Description>
+                        </div>
+                        <Dialog.Close asChild>
+                          <button
+                            type="button"
+                            aria-label="Fechar carrinho"
+                            className="rounded-xl border border-slate-200 bg-slate-50 p-2 text-slate-600 transition hover:bg-slate-100"
+                          >
+                            <X size={16} />
+                          </button>
+                        </Dialog.Close>
+                      </div>
+
+                      {selectedItems.length > 0 ? (
+                        <ul className="mt-4 max-h-60 space-y-2 overflow-auto pr-1">
+                          {selectedItems.map((item) => (
+                            <li
+                              key={item.id}
+                              className="flex items-start justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2"
+                            >
+                              <span className="min-w-0 flex-1">
+                                <strong className="block truncate text-sm text-slate-900">{item.name}</strong>
+                                <small className="block truncate text-xs text-slate-500">
+                                  {item.sectorTitle} · {item.brand}
+                                </small>
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => toggleItem(item.id)}
+                                className="rounded-lg border border-rose-200 bg-rose-50 px-2 py-1 text-xs font-semibold text-rose-700 transition hover:bg-rose-100"
+                              >
+                                Remover
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="mt-4 text-sm text-slate-500">Seu carrinho ainda esta vazio.</p>
+                      )}
                     </Dialog.Content>
                   </Dialog.Portal>
                 </Dialog.Root>
@@ -572,7 +641,7 @@ function ClientRoutePage() {
         </article>
       </div>
 
-      <div className="fixed bottom-4 right-4 z-40 flex flex-col items-end gap-2 sm:bottom-6 sm:right-6" aria-label="Carrinho flutuante">
+      <div className="fixed bottom-4 right-4 z-40 hidden flex-col items-end gap-2 sm:bottom-6 sm:right-6 sm:flex" aria-label="Carrinho flutuante">
         {isCartOpen ? (
           <section className="w-[min(92vw,22rem)] rounded-2xl border border-rose-100 bg-white p-3 shadow-[0_18px_40px_rgba(15,23,42,0.22)]">
             <header className="flex items-center justify-between gap-2">
@@ -593,26 +662,29 @@ function ClientRoutePage() {
               </button>
             </header>
 
-            {selectedItemIds.length > 0 ? (
-              <div className="mt-3 flex max-h-40 flex-wrap gap-2 overflow-auto pr-1">
-                {selectedItemIds.map((itemId) => {
-                  const item = itemById.get(itemId);
-                  if (!item) {
-                    return null;
-                  }
-
-                  return (
+            {selectedItems.length > 0 ? (
+              <ul className="mt-3 max-h-52 space-y-2 overflow-auto pr-1">
+                {selectedItems.map((item) => (
+                  <li
+                    key={item.id}
+                    className="flex items-start justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2"
+                  >
+                    <span className="min-w-0 flex-1">
+                      <strong className="block truncate text-sm text-slate-900">{item.name}</strong>
+                      <small className="block truncate text-xs text-slate-500">
+                        {item.sectorTitle} · {item.brand}
+                      </small>
+                    </span>
                     <button
-                      key={itemId}
                       type="button"
-                      onClick={() => toggleItem(itemId)}
-                      className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700 transition hover:bg-rose-100"
+                      onClick={() => toggleItem(item.id)}
+                      className="rounded-lg border border-rose-200 bg-rose-50 px-2 py-1 text-xs font-semibold text-rose-700 transition hover:bg-rose-100"
                     >
-                      {item.name}
+                      Remover
                     </button>
-                  );
-                })}
-              </div>
+                  </li>
+                ))}
+              </ul>
             ) : (
               <p className="mt-3 text-xs text-slate-500">Seu carrinho ainda esta vazio.</p>
             )}
